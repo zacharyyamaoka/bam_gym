@@ -55,8 +55,9 @@ class RequestHeader:
 
 
 class ErrorCode:
-    SUCCESS = 0
-    FAILURE = 1
+    UNDEFINED = 0
+    SUCCESS = 1
+    FAILURE = 2
     # Add more codes as needed
 
     def __init__(self, value: int = SUCCESS):
@@ -71,6 +72,7 @@ class ResponseHeader:
                  duration: float = 0.0,
                  error_code: ErrorCode = None,
                  error_msg: str = ""):
+        
         self.duration = duration
         self.error_code = error_code or ErrorCode()
         self.error_msg = error_msg
@@ -84,11 +86,20 @@ class ResponseHeader:
             error_code=ErrorCode(d.get("error_code", {}).get("value", ErrorCode.FAILURE)),
             error_msg=d.get("error_msg", "")
         )
+    
+    def to_dict(self):
+        return {
+            "duration": self.duration,
+            "error_code": self.error_code.to_dict(),
+            "error_msg": self.error_msg,
+        }
 
 
 class GymAPIRequest:
     def __init__(self,
                  header: RequestHeader = None,
+                 seed: int = 0, # for ROS msg, int is required
+                 env_name: str = "",
                  discrete_action: List[int] = None,
                  contious_action: List[float] = None):
         
@@ -103,6 +114,8 @@ class GymAPIRequest:
         discrete_action = ensure_list(discrete_action)
         contious_action = ensure_list(contious_action)
 
+        self.env_name = env_name
+        self.seed = seed
         self.header = header or RequestHeader()
         self.discrete_action = discrete_action
         self.contious_action = contious_action 
@@ -111,6 +124,8 @@ class GymAPIRequest:
 
         return {
             "header": self.header.to_dict(),
+            "seed": self.seed,
+            "env_name": self.env_name,
             "discrete_action": [int(x) for x in self.discrete_action],
             "contious_action": [float(x) for x in self.contious_action],
         }
@@ -133,18 +148,26 @@ class GymAPIResponse:
             self.reward,
             self.terminated,
             self.truncated,
-            self.info_as_dict()
+            self.info_dump()
         )
 
     def to_reset_tuple(self):
         return (
             np.array(self.observation, dtype=np.float32),
-            self.info_as_dict()
+            self.info_dump()
         )
     
-    def info_as_dict(self):
+    def info_dump(self):
         try:
-            return json.loads(self.info)
-        except json.JSONDecodeError:
-            return {}
+            info_dict = json.loads(self.info) if self.info else {}
+        except json.JSONDecodeError as e:
+            print("Warning: Failed to parse info JSON:", e)
+            info_dict = {}
+
+        info_dict["color_img"] = self.color_img
+        info_dict["depth_img"] = self.depth_img
+        info_dict["header"] = self.header.to_dict() 
+
+        return info_dict
+
 

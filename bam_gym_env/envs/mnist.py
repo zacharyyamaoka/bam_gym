@@ -43,8 +43,7 @@ class MNISTEnv(gym.Env):
         self._reset(seed)
         self._seed = seed
 
-        print("This environment auto-resets, so you only need to call this once at the start")
-        return self.current_img, {"auto_reset":True}
+        return self.current_img
 
     def step(self, action):
         self.curr_action = action 

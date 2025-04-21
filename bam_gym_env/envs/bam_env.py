@@ -15,6 +15,11 @@ class BamEnv(gym.Env):
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
 
+        self.env_name = "bam_env" # this should get overriden by child class
+
+        # Params from pygame rendering
+        # Env's can always implement their own custom game, 
+        # but idea is to provide a basic GUI for viewing images
         self.window = None
         self.clock = None
 
@@ -29,24 +34,34 @@ class BamEnv(gym.Env):
 
         request = GymAPIRequest()
         request.header.request_type = RequestType.RESET
+        if seed != None:
+            request.seed = seed
+            # Ros msg seed = 0 is no seed
+            # gym seed = None is no seed
+        request.env_name = self.env_name
         self.response: GymAPIResponse = self.transport.step(request)
 
         return self.response
 
     def _step(self, request: GymAPIRequest) -> GymAPIResponse:
         request.header.request_type = RequestType.STEP
+        request.env_name = self.env_name
         self.response = self.transport.step(request)
         return self.response
 
     def _render(self):
         
         if self.response.color_img is None:
+            print("No color image recivied")
             return 
         
         # Convert BGR to RGB for PyGame
         # rgb_image = cv2.cvtColor(self.response.color_img, cv2.COLOR_BGR2RGB)
         rgb_image = self.response.color_img
-
+        if not hasattr(rgb_image, "shape"):
+            print("Cannot render, empty color image")
+            return
+        
         if self.render_mode == "human":
 
             # Flip vertically if needed (OpenCV and PyGame may have different origins)
@@ -78,6 +93,7 @@ class BamEnv(gym.Env):
 
         request = GymAPIRequest()
         request.header.request_type = RequestType.CLOSE
+        request.env_name = self.env_name
         self.response = self.transport.step(request)
 
         return self.response

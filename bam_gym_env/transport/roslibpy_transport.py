@@ -20,11 +20,11 @@ class RoslibpyTransport():
         node_name = node_name.strip('/')
 
         self.client = roslibpy.Ros(host=host_ip, port=port)
+
+        print(f'Trying to connect to ROS bridge at {host_ip}:{port}...')
         self.client.run()
 
         self.timeout_sec = timeout_sec
-
-        print(f'Trying to connect to ROS bridge at {host_ip}:{port}...')
         # Wait until connected
         while not self.client.is_connected:
             print('Waiting for ROS bridge connection...')

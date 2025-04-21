@@ -16,10 +16,8 @@ In here we wrap the GymAPI functionality and present a familar interface to othe
 class CartPole(BamEnv):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
 
-    def __init__(self, render_mode=None):
-        
-        transport = RoslibpyTransport("test_ns")
-    
+    def __init__(self, transport, render_mode=None):
+            
         super().__init__(transport, render_mode)
 
         # CartPole has 4 float observations
@@ -30,6 +28,9 @@ class CartPole(BamEnv):
         )
 
         self.action_space = spaces.Discrete(2)  # Left or right
+
+        self.env_name = "cart_pole"
+        self.response = GymAPIResponse(dict())
 
         # You can access the saved response via the parent class
     def reset(self, seed=None, options=None):
@@ -45,6 +46,7 @@ class CartPole(BamEnv):
         # convert from action in request
         request = GymAPIRequest()
         request.header.request_type = RequestType.STEP
+        request.env_name = self.env_name
         request.discrete_action = [action]
 
         # convert from response into standard tuple
