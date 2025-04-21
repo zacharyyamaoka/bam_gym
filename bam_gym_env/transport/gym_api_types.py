@@ -53,48 +53,6 @@ class RequestHeader:
             "expected_duration": self.expected_duration,
         }
 
-
-class ErrorCode:
-    UNDEFINED = 0
-    SUCCESS = 1
-    FAILURE = 2
-    # Add more codes as needed
-
-    def __init__(self, value: int = SUCCESS):
-        self.value = value
-
-    def to_dict(self):
-        return {"value": self.value}
-
-
-class ResponseHeader:
-    def __init__(self,
-                 duration: float = 0.0,
-                 error_code: ErrorCode = None,
-                 error_msg: str = ""):
-        
-        self.duration = duration
-        self.error_code = error_code or ErrorCode()
-        self.error_msg = error_msg
-
-    # Clean way to instate object from a dict
-    # Use like header = ResponseHeader.from_dict()
-    @classmethod
-    def from_dict(cls, d: dict):
-        return cls(
-            duration=d.get("duration", 0.0),
-            error_code=ErrorCode(d.get("error_code", {}).get("value", ErrorCode.FAILURE)),
-            error_msg=d.get("error_msg", "")
-        )
-    
-    def to_dict(self):
-        return {
-            "duration": self.duration,
-            "error_code": self.error_code.to_dict(),
-            "error_msg": self.error_msg,
-        }
-
-
 class GymAPIRequest:
     def __init__(self,
                  header: RequestHeader = None,
@@ -128,6 +86,53 @@ class GymAPIRequest:
             "env_name": self.env_name,
             "discrete_action": [int(x) for x in self.discrete_action],
             "contious_action": [float(x) for x in self.contious_action],
+        }
+
+class ErrorCode:
+    UNDEFINED = 0
+    SUCCESS = 1
+    FAILURE = 2
+    # Add more codes as needed
+
+    def __init__(self, value: int = SUCCESS):
+        self.value = value
+
+    def to_dict(self):
+        return {"value": self.value}
+    
+    @classmethod
+    def name(cls, value: int) -> str:
+        for attr in dir(cls):
+            if not attr.startswith("_") and isinstance(getattr(cls, attr), int):
+                if getattr(cls, attr) == value:
+                    return f"{attr} ({value})"
+        return f"UNKNOWN ({value})"
+
+class ResponseHeader:
+    def __init__(self,
+                 duration: float = 0.0,
+                 error_code: ErrorCode = None,
+                 error_msg: str = ""):
+        
+        self.duration = duration
+        self.error_code = error_code or ErrorCode()
+        self.error_msg = error_msg
+
+    # Clean way to instate object from a dict
+    # Use like header = ResponseHeader.from_dict()
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls(
+            duration=d.get("duration", 0.0),
+            error_code=ErrorCode(d.get("error_code", {}).get("value", ErrorCode.FAILURE)),
+            error_msg=d.get("error_msg", "")
+        )
+    
+    def to_dict(self):
+        return {
+            "duration": self.duration,
+            "error_code": self.error_code.to_dict(),
+            "error_msg": self.error_msg,
         }
 
 
@@ -164,8 +169,19 @@ class GymAPIResponse:
             print("Warning: Failed to parse info JSON:", e)
             info_dict = {}
 
-        info_dict["color_img"] = self.color_img
-        info_dict["depth_img"] = self.depth_img
+        # the info shouldn't have raw ros msg info. 
+        # for simplicity, images should either be numpy arrays or None
+
+        if hasattr(self.color_img, "shape"):
+            info_dict["color_img"] = self.color_img
+        else:
+            info_dict["color_img"] = None
+
+        if hasattr(self.depth_img, "shape"):
+            info_dict["depth_img"] = self.depth_img
+        else:
+            info_dict["depth_img"] = None
+
         info_dict["header"] = self.header.to_dict() 
 
         return info_dict

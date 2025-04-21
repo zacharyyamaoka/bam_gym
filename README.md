@@ -14,6 +14,14 @@ This repository hosts the examples that are shown [on the environment creation d
 
 - `GridWorldEnv`: Simplistic implementation of gridworld environment
 
+These are local gym libraries
+
+local bam environments
+- classic_bandit
+- mnist
+
+Transport bam environments
+running on remote computers
 
 ## Installation
 

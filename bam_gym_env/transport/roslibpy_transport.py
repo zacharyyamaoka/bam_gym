@@ -35,24 +35,25 @@ class RoslibpyTransport():
         self.service = roslibpy.Service(self.client, namespace + "/" + node_name + "/gym_api_request", 'bam_msgs/GymAPI')
 
     def step(self, request: GymAPIRequest) -> GymAPIResponse:
+        
+        try:
+            ros_request = roslibpy.ServiceRequest(request.to_dict())
 
-        # try:
-        ros_request = roslibpy.ServiceRequest(request.to_dict())
+            ros_response = self.service.call(ros_request, timeout=self.timeout_sec)
 
-        ros_response = self.service.call(ros_request, timeout=self.timeout_sec)
+            # Decompress image, do this in here so gym layer doesn't need to worry about it
+            self.decompress_img(ros_response)
 
-        # Decompress image, do this in here so gym layer doesn't need to worry about it
-        self.decompress_img(ros_response)
+            response = GymAPIResponse(ros_response)
+            return response
 
-        response = GymAPIResponse(ros_response)
-        return response
-
-        # except Exception as e:
-        #     print(f"[ERROR] {e}")
-        #     response = GymAPIResponse(dict())
-        #     response.header.error_code = ErrorCode.FAILURE
-        #     response.header.error_msg = f"{e}"
-        #     return response
+        except Exception as e:
+            print(f"[ERROR] {e}")
+            print("Make sure environment is running on server")
+            response = GymAPIResponse(dict())
+            response.header.error_code = ErrorCode(ErrorCode.FAILURE)
+            response.header.error_msg = f"{e}"
+            return response
         
     def decompress_img(self, response):
         # See: https://roslibpy.readthedocs.io/en/latest/examples/05_subscribe_to_images.html
