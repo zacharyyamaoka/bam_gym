@@ -32,6 +32,14 @@ To install your new environment, run the following commands:
 1. First download repo
 - If Using ROS its reccomeded you do in different directory than bam_ws, as cd-autocomplete becomes a pain! Either in bam_ws/src/ or in other_bam_packages/
 
+2. Install depencies
+
+```
+sudo apt update
+
+sudo apt install python3-pip python3-venv
+
+```
 
 2. Install package into your virtual environment
 
@@ -39,9 +47,22 @@ To install your new environment, run the following commands:
 - If you don't have one and want to standlone test, create a new virtual env
 
 ```{shell}
-cd bam_gym_env
-python3 -m venv --copies venv
-source venv/bin/activate
+cd bam_gym
+python3 -m venv --copies .venv
+source .venv/bin/activate
+
+```
+
+```
+python3 -m pip install gymnasium pygame
+
+```
+
+Determine your CUDA version and install correct torch
+```
+nvidia-smi
+
+python3 -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu124
 
 ```
 
