@@ -61,16 +61,8 @@ class GymAPIRequest:
                  discrete_action: List[int] = None,
                  contious_action: List[float] = None):
         
-        def ensure_list(x):
-            if x is None:
-                return []
-            elif isinstance(x, (list, tuple)):
-                return list(x)
-            else:
-                return [x]
-            
-        discrete_action = ensure_list(discrete_action)
-        contious_action = ensure_list(contious_action)
+        discrete_action = self.ensure_list(discrete_action)
+        contious_action = self.ensure_list(contious_action)
 
         self.env_name = env_name
         self.seed = seed
@@ -78,6 +70,14 @@ class GymAPIRequest:
         self.discrete_action = discrete_action
         self.contious_action = contious_action 
 
+    def ensure_list(self, action):
+        if action is None:
+            return []
+        elif isinstance(action, (list, tuple)):
+            return list(action)
+        else:
+            return [action]
+        
     def to_dict(self):
 
         return {

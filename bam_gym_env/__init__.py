@@ -14,3 +14,8 @@ register(
     id="bam/CartPole",
     entry_point="bam_gym_env.envs:CartPole",
 )
+
+register(
+    id="bam/GraspV1",
+    entry_point="bam_gym_env.envs:GraspV1",
+)

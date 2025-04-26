@@ -10,7 +10,8 @@ transport = RoslibpyTransport("test_ns")
 # env = gym.make("CartPole-v1", render_mode="human")
 # env = gym.make("bam/GridWorld-v0")
 # env = gym.make("bam/MNIST", render_mode="human")
-env = gym.make("bam/CartPole", transport=transport, render_mode="human")
+# env = gym.make("bam/CartPole", transport=transport, render_mode="human")
+env = gym.make("bam/GraspV1", transport=transport, render_mode="human")
 
 reset_on_terminate = True
 
