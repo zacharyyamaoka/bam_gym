@@ -5,8 +5,9 @@ import pygame
 import numpy as np
 
 from bam_gym_env.envs import BamEnv
-from bam_gym_env.transport import RoslibpyTransport, CustomTransport, GymAPIRequest, GymAPIResponse, RequestType
-
+from bam_gym_env.transport import RoslibpyTransport, CustomTransport
+from bam_gym_env.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym_env.ros_types.bam_msgs import ErrorCode, GymAction
 """
 Discretize grasping space
 

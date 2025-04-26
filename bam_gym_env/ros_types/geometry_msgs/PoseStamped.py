@@ -1,5 +1,5 @@
-from std_msgs.Header import Header
-from geometry_msgs.Pose import Pose
+from bam_gym_env.ros_types.std_msgs.Header import Header
+from bam_gym_env.ros_types.geometry_msgs.Pose import Pose
 
 class PoseStamped:
     def __init__(self, header=None, pose=None):

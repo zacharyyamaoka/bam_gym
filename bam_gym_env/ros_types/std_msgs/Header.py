@@ -1,4 +1,4 @@
-from builtin_interfaces.Time import Time  # We'll define Time too if you don't have it yet
+from bam_gym_env.ros_types.builtin_interfaces import Time  # We'll define Time too if you don't have it yet
 
 class Header:
     def __init__(self, stamp=None, frame_id: str = ""):
@@ -10,3 +10,4 @@ class Header:
             "stamp": self.stamp.to_dict(),
             "frame_id": self.frame_id,
         }
+    

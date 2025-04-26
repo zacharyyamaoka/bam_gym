@@ -5,11 +5,15 @@ import pygame
 import numpy as np
 
 from bam_gym_env.envs import BamEnv
-from bam_gym_env.transport import RoslibpyTransport, CustomTransport, GymAPIRequest, GymAPIResponse, RequestType
-
+from bam_gym_env.transport import RoslibpyTransport, CustomTransport
+from bam_gym_env.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym_env.ros_types.bam_msgs import ErrorCode, GymAction, GymFeedback
+from bam_gym_env.ros_types.utils import ensure_list
 
 """
 In here we wrap the GymAPI functionality and present a familar interface to other gym environments
+
+Go from normal gym to Ros Transport
 
 """
 
@@ -30,31 +34,37 @@ class CartPole(BamEnv):
         self.action_space = spaces.Discrete(2)  # Left or right
 
         self.env_name = "cart_pole"
-        self.response = GymAPIResponse(dict())
 
         # You can access the saved response via the parent class
+        # Don't save the response, stateless design
+        
     def reset(self, seed=None, options=None):
         
         response = self._reset(seed, options)
-
+        feedback = response.feedback[0]
         self._render()
 
-        return response.to_reset_tuple()
+        return feedback.to_reset_tuple()
 
     def step(self, action):
 
         # convert from action in request
         request = GymAPIRequest()
+
         request.header.request_type = RequestType.STEP
         request.env_name = self.env_name
-        request.discrete_action = [action]
+
+        action_msg = GymAction()
+        action_msg.discrete_action = ensure_list(action)
+        request.action = [action_msg]
 
         # convert from response into standard tuple
         response: GymAPIResponse = self._step(request)
+        feedback: GymFeedback = response.feedback[0]
 
         self._render()
 
-        return response.to_step_tuple()
+        return feedback.to_step_tuple()
     
     def render(self):
         return self._render(self)

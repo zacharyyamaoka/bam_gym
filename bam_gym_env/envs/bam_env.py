@@ -5,7 +5,9 @@ import pygame
 import numpy as np
 import cv2
 
-from bam_gym_env.transport import RoslibpyTransport, CustomTransport, GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym_env.transport import RoslibpyTransport, CustomTransport
+from bam_gym_env.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym_env.ros_types.bam_msgs import ErrorCode
 
 class BamEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
@@ -27,7 +29,7 @@ class BamEnv(gym.Env):
         # self.request =  GymAPIRequest()
         self.transport = transport
 
-        self.response = GymAPIResponse(dict())
+        self.response = GymAPIResponse()
 
     def _reset(self, seed=None, options=None)-> GymAPIResponse:
         super().reset(seed=seed) # gym docs says to do this...
@@ -46,18 +48,23 @@ class BamEnv(gym.Env):
     def _step(self, request: GymAPIRequest) -> GymAPIResponse:
         request.header.request_type = RequestType.STEP
         request.env_name = self.env_name
-        self.response = self.transport.step(request)
+        self.response: GymAPIResponse = self.transport.step(request)
         return self.response
 
     def _render(self):
-        
-        if self.response.color_img is None:
+        """"""
+        if len(self.response.feedback) == 0:
+            print("No response recivied")
+            return 
+               
+        r = self.response.feedback[0]
+        if r.color_img is None:
             print("No color image recivied")
             return 
         
         # Convert BGR to RGB for PyGame
-        # rgb_image = cv2.cvtColor(self.response.color_img, cv2.COLOR_BGR2RGB)
-        rgb_image = self.response.color_img
+        # rgb_image = cv2.cvtColor(r.color_img, cv2.COLOR_BGR2RGB)
+        rgb_image = r.color_img
         if not hasattr(rgb_image, "shape"):
             print("Cannot render, empty color image")
             return

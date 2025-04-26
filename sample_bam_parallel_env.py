@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import gymnasium as gym
 import bam_gym_env
 from bam_gym_env.transport import ErrorCode, RoslibpyTransport

@@ -208,7 +208,7 @@ class ResponseHeader:
             "error_msg": self.error_msg,
         }
 
-class GymResponse:
+class GymFeedback:
     def __init__(self,
                  observation: List[float] = None,
                  color_img: Any = None,
@@ -278,7 +278,7 @@ class GymResponse:
 class GymAPIResponse:
     def __init__(self, response: dict):
         self.header = ResponseHeader.from_dict(response.get("header", {}))
-        self.response = GymResponse.from_dict(response.get("response", {}))
+        self.response = GymFeedback.from_dict(response.get("response", {}))
 
     def to_step_tuple(self):
         return self.response.to_step_tuple()

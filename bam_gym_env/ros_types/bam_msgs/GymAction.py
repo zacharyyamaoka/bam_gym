@@ -1,6 +1,4 @@
 from enum import IntEnum
-from geometry_msgs.PoseStamped import PoseStamped
-from bam_msgs.WaypointParams import WaypointParams
 from typing import List
 
 class ActionType(IntEnum):
@@ -17,20 +15,16 @@ class GymAction:
         self.prefix = ""
         self.discrete_action: List[int] = []
         self.contious_action: List[float] = []
-        self.pose_action: List[PoseStamped] = []
-        self.parameters: List[WaypointParams] = []
         self.rank: int = 0
         self.linked_actions: List[int] = []
 
     def to_dict(self):
         return {
-            "action_type": int(self.action_type),
+            "action_type": self.action_type,
             "ns": self.ns,
             "prefix": self.prefix,
-            "discrete_action": self.discrete_action,
-            "contious_action": self.contious_action,
-            "pose_action": [p.to_dict() for p in self.pose_action],
-            "parameters": [p.to_dict() for p in self.parameters],
-            "rank": self.rank,
+            "discrete_action": [int(a) for a in self.discrete_action],
+            "contious_action": [float(a) for a in self.contious_action],
+            "rank": int(self.rank),
             "linked_actions": self.linked_actions,
         }
