@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import gymnasium as gym
-import bam_gym_env
-from bam_gym_env.ros_types.bam_msgs import ErrorCode
-from bam_gym_env.transport import RoslibpyTransport
+import bam_gym
+from bam_gym.ros_types.bam_msgs import ErrorCode
+from bam_gym.transport import RoslibpyTransport
 import copy
 
 

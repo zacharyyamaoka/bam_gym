@@ -1,1 +1,1 @@
-from bam_gym_env.ros_types.std_msgs.Header import Header
+from bam_gym.ros_types.std_msgs.Header import Header

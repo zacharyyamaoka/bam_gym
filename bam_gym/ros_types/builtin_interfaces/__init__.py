@@ -1,1 +1,1 @@
-from bam_gym_env.ros_types.builtin_interfaces.Time import Time
+from bam_gym.ros_types.builtin_interfaces.Time import Time

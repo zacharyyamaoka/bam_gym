@@ -3,8 +3,8 @@ import time
 import base64
 import numpy as np
 import cv2
-from bam_gym_env.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
-from bam_gym_env.ros_types.bam_msgs import ErrorCode
+from bam_gym.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym.ros_types.bam_msgs import ErrorCode
 
 # https://roslibpy.readthedocs.io/en/latest/examples.html
 

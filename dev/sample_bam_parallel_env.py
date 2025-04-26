@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 
 import gymnasium as gym
-import bam_gym_env
-from bam_gym_env.ros_types.bam_msgs import ErrorCode
-from bam_gym_env.transport import RoslibpyTransport
+import bam_gym
+from bam_gym.transport import ErrorCode, RoslibpyTransport
 import copy
 
 
 # First make transport, this allows it communicate with backend server
-transport = RoslibpyTransport("bam_GPU")
+transport = RoslibpyTransport("test_ns")
 
 # env = gym.make("CartPole-v1", render_mode="human")
 # env = gym.make("bam/GridWorld-v0")
 # env = gym.make("bam/MNIST", render_mode="human")
-env = gym.make("bam/CartPole", transport=transport, render_mode="human")
-# env = gym.make("bam/GraspV1", transport=transport, render_mode="human")
+# env = gym.make("bam/CartPole", transport=transport, render_mode="human")
+env = gym.make("bam/GraspV1", transport=transport, render_mode="human")
 
 reset_on_terminate = True
 
@@ -25,7 +24,6 @@ for _ in range(100):
     observation, reward, terminated, truncated, info = env.step(action)
 
     print(f"\nStep Result:")
-    print(f"Action: {action}")
     print(f"Observation: {observation}")
     print(f"Reward: {reward}")
     print(f"Terminated: {terminated}")

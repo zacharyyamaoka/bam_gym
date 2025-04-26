@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import json
-from bam_gym_env.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
-from bam_gym_env.ros_types.bam_msgs import GymAction
+from bam_gym.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym.ros_types.bam_msgs import GymAction
 
 
 action = GymAction()

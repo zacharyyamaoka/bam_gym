@@ -1,4 +1,4 @@
-from bam_gym_env.ros_types.bam_msgs import ErrorCode
+from bam_gym.ros_types.bam_msgs import ErrorCode
 
 class ResponseHeader:
     def __init__(self):

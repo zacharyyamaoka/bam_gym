@@ -4,7 +4,7 @@ import numpy as np
 import copy
 import json
 
-from bam_gym_env.ros_types.bam_msgs import RequestHeader, ResponseHeader, GymAction, GymFeedback, ErrorType
+from bam_gym.ros_types.bam_msgs import RequestHeader, ResponseHeader, GymAction, GymFeedback, ErrorType
 
 class RequestType(IntEnum):
     NONE = 0

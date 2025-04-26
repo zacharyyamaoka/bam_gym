@@ -2,20 +2,20 @@ from gymnasium.envs.registration import register
 
 register(
     id="bam/GridWorld-v0",
-    entry_point="bam_gym_env.envs:GridWorldEnv",
+    entry_point="bam_gym.envs:GridWorldEnv",
 )
 
 register(
     id="bam/MNIST",
-    entry_point="bam_gym_env.envs:MNISTEnv",
+    entry_point="bam_gym.envs:MNISTEnv",
 )
 
 register(
     id="bam/CartPole",
-    entry_point="bam_gym_env.envs:CartPole",
+    entry_point="bam_gym.envs:CartPole",
 )
 
 register(
     id="bam/GraspV1",
-    entry_point="bam_gym_env.envs:GraspV1",
+    entry_point="bam_gym.envs:GraspV1",
 )

@@ -1,5 +1,5 @@
-from bam_gym_env.ros_types.geometry_msgs.Point import Point
-from bam_gym_env.ros_types.geometry_msgs.Quaternion import Quaternion
+from bam_gym.ros_types.geometry_msgs.Point import Point
+from bam_gym.ros_types.geometry_msgs.Quaternion import Quaternion
 
 class Pose:
     def __init__(self, position=None, orientation=None):

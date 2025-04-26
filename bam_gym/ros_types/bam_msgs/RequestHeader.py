@@ -1,4 +1,4 @@
-from bam_gym_env.ros_types.builtin_interfaces import Time
+from bam_gym.ros_types.builtin_interfaces import Time
 
 class RequestHeader:
     def __init__(self):

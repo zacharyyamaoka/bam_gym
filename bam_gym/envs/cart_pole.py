@@ -4,11 +4,11 @@ from gymnasium import spaces
 import pygame
 import numpy as np
 
-from bam_gym_env.envs import BamEnv
-from bam_gym_env.transport import RoslibpyTransport, CustomTransport
-from bam_gym_env.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
-from bam_gym_env.ros_types.bam_msgs import ErrorCode, GymAction, GymFeedback
-from bam_gym_env.ros_types.utils import ensure_list
+from bam_gym.envs import BamEnv
+from bam_gym.transport import RoslibpyTransport, CustomTransport
+from bam_gym.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction, GymFeedback
+from bam_gym.ros_types.utils import ensure_list
 
 """
 In here we wrap the GymAPI functionality and present a familar interface to other gym environments

@@ -53,12 +53,13 @@ source .venv/bin/activate
 
 ```
 
-```
-python3 -m pip install gymnasium pygame
+Make sure your virtual env is active for the next steps 
 
-```
+Upgrade packages, then install
 
-Determine your CUDA version and install correct torch
+--
+
+Determine your CUDA version and install correct torch. 
 ```
 nvidia-smi
 
@@ -66,14 +67,15 @@ python3 -m pip install torch torchvision torchaudio --extra-index-url https://do
 
 ```
 
-Make sure your virtual env is active for the next steps 
-
-Upgrade packages, then install
-
 ```{shell}
 python3 -m pip install --upgrade pip setuptools wheel build hatchling
-cd /bam_gym_env
+cd /bam_gym
 python3 -m pip install -e .
+```
+
+```
+python3 -m pip install gymnasium pygame
+
 ```
 
 Check its installed correctly into your virtual env

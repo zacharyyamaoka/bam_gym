@@ -1,5 +1,5 @@
 import gymnasium as gym
-import bam_gym_env
+import bam_gym
 import numpy as np
 
 # Add new environments here to list out

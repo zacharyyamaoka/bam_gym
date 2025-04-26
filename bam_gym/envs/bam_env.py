@@ -5,9 +5,9 @@ import pygame
 import numpy as np
 import cv2
 
-from bam_gym_env.transport import RoslibpyTransport, CustomTransport
-from bam_gym_env.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
-from bam_gym_env.ros_types.bam_msgs import ErrorCode
+from bam_gym.transport import RoslibpyTransport, CustomTransport
+from bam_gym.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym.ros_types.bam_msgs import ErrorCode
 
 class BamEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
