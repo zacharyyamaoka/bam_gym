@@ -158,3 +158,8 @@ To verify the performance of the algorithim on completely new data, this interfa
 3. Play/Experimentation
 
     Easy to poke around, and better understand the dynamics/action/observation spaces
+
+
+# example agents
+
+Folder is at top level so it imports it the same as an external
