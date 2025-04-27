@@ -15,5 +15,6 @@ dependencies = [
   "roslibpy",
   "typeguard",
   "pyyaml",
-  "opencv-python"
+  "opencv-python",
+  "matplotlib"
 ]

@@ -19,3 +19,15 @@ register(
     id="bam/GraspV1",
     entry_point="bam_gym.envs:GraspV1",
 )
+
+register(
+    id="bam/GraspXY",
+    entry_point="bam_gym.envs:GraspXY",
+)
+
+register(
+    id="bam/ClassicBandit",
+    entry_point="bam_gym.envs:ClassicBandit",
+)
+
+

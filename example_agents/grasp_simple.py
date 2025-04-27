@@ -23,3 +23,4 @@ for _ in range(100):
     if (terminated or truncated):
         observation, info = env.reset()
 env.close()
+
