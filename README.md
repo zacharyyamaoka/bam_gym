@@ -102,7 +102,7 @@ The MDP interface really captures the essence of what we want to do here.
 It's a super powerful abstraction, with a common set of language and open source tools (gym, rllib, etc.)
 
 
-- It depends only on the same things needed to run gym envionrments (like cartpole)
+- It depends only on the same things needed to run gym envionrments (like cart_pole)
 - gynamisum, pygame, numpy, etc.
 - Install open cv and cv bridge for parsing images
 
