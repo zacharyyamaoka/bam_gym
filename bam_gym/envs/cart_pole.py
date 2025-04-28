@@ -6,7 +6,7 @@ import numpy as np
 
 from bam_gym.envs import BamEnv
 from bam_gym.transport import RoslibpyTransport, CustomTransport
-from bam_gym.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction, GymFeedback
 from bam_gym.ros_types.utils import ensure_list
 
@@ -49,7 +49,7 @@ class CartPole(BamEnv):
     def step(self, action):
 
         # convert from action in request
-        request = GymAPIRequest()
+        request = GymAPI_Request()
 
         request.header.request_type = RequestType.STEP
         request.env_name = self.env_name
@@ -59,7 +59,7 @@ class CartPole(BamEnv):
         request.action = [action_msg]
 
         # convert from response into standard tuple
-        response: GymAPIResponse = self._step(request)
+        response: GymAPI_Response = self._step(request)
         feedback: GymFeedback = response.feedback[0]
 
         self._render()

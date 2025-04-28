@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 
 from bam_gym.transport import RoslibpyTransport, CustomTransport
-from bam_gym.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode
 
 class BamEnv(gym.Env):
@@ -26,29 +26,29 @@ class BamEnv(gym.Env):
         self.clock = None
 
         # Go for stateless design
-        # self.request =  GymAPIRequest()
+        # self.request =  GymAPI_Request()
         self.transport = transport
 
-        self.response = GymAPIResponse()
+        self.response = GymAPI_Response()
 
-    def _reset(self, seed=None, options=None)-> GymAPIResponse:
+    def _reset(self, seed=None, options=None)-> GymAPI_Response:
         super().reset(seed=seed) # gym docs says to do this...
 
-        request = GymAPIRequest()
+        request = GymAPI_Request()
         request.header.request_type = RequestType.RESET
         if seed != None:
             request.seed = seed
             # Ros msg seed = 0 is no seed
             # gym seed = None is no seed
         request.env_name = self.env_name
-        self.response: GymAPIResponse = self.transport.step(request)
+        self.response: GymAPI_Response = self.transport.step(request)
 
         return self.response
 
-    def _step(self, request: GymAPIRequest) -> GymAPIResponse:
+    def _step(self, request: GymAPI_Request) -> GymAPI_Response:
         request.header.request_type = RequestType.STEP
         request.env_name = self.env_name
-        self.response: GymAPIResponse = self.transport.step(request)
+        self.response: GymAPI_Response = self.transport.step(request)
         return self.response
 
     def _render(self):
@@ -98,7 +98,7 @@ class BamEnv(gym.Env):
             pygame.display.quit()
             pygame.quit()
 
-        request = GymAPIRequest()
+        request = GymAPI_Request()
         request.header.request_type = RequestType.CLOSE
         request.env_name = self.env_name
         self.response = self.transport.step(request)

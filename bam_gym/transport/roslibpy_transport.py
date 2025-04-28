@@ -3,7 +3,7 @@ import time
 import base64
 import numpy as np
 import cv2
-from bam_gym.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode
 
 # https://roslibpy.readthedocs.io/en/latest/examples.html
@@ -37,7 +37,7 @@ class RoslibpyTransport():
 
         self.service = roslibpy.Service(self.client, service_topic, service_type)
 
-    def step(self, request: GymAPIRequest) -> GymAPIResponse:
+    def step(self, request: GymAPI_Request) -> GymAPI_Response:
         
         # try:
         print(request.to_dict())
@@ -51,13 +51,13 @@ class RoslibpyTransport():
         # TODO POPULATE RESPONSE HERE
         # Decompress image, do this in here so gym layer doesn't need to worry about it
         # self.decompress_imgs(ros_response)
-        response = GymAPIResponse.from_dict(ros_response)
+        response = GymAPI_Response.from_dict(ros_response)
         return response
 
         # except Exception as e:
         #     print(f"[ERROR] {e}")
         #     print("Make sure environment is running on server")
-        #     response = GymAPIResponse()
+        #     response = GymAPI_Response()
         #     # response.header.error_code = ErrorCode(ErrorCode.FAILURE)
         #     # response.header.error_msg = f"{e}"
         #     return response
@@ -105,7 +105,7 @@ def main():
 
     transport = RoslibpyTransport('bam_GPU')
 
-    request = GymAPIRequest()
+    request = GymAPI_Request()
     request.env_name = 'cart_pole'
     request.header.request_type = RequestType.RESET
     response = transport.step(request)

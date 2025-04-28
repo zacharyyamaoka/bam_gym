@@ -136,7 +136,7 @@ class GymAction:
             "linked_actions": self.linked_actions,
         }
        
-class GymAPIRequest:
+class GymAPI_Request:
     def __init__(self,
                  header: RequestHeader = None,
                  seed: int = 0, # for ROS msg, int is required
@@ -275,7 +275,7 @@ class GymFeedback:
 
         return info_dict
 
-class GymAPIResponse:
+class GymAPI_Response:
     def __init__(self, response: dict):
         self.header = ResponseHeader.from_dict(response.get("header", {}))
         self.response = GymFeedback.from_dict(response.get("response", {}))
