@@ -33,6 +33,13 @@ class GymAPI_Response:
         self.header = ResponseHeader()
         self.feedback: List[GymFeedback] = []
 
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls()
+        obj.header = ResponseHeader.from_dict(d.get("header", {}))
+        obj.feedback = [GymFeedback.from_dict(f) for f in d.get("feedback", [])]
+        return obj
+    
     def to_dict(self):
         return {
             "header": self.header.to_dict(),
@@ -41,25 +48,27 @@ class GymAPI_Response:
     
     def to_step_tuple(self):
         """Unpack all responses into separate lists."""
-        observations = []
+        observations = [] # sequence
         rewards = []
         terminated = []
         truncated = []
-        infos = {}
+        infos = {} # keep infos dict to add top level info like 'header'
 
         for idx, f in enumerate(self.feedback):
             obs, reward, term, trunc, info = f.to_step_tuple()
             observations.append(obs)
             rewards.append(reward)
-            terminated.append(term)
+            terminated.append(term) 
             truncated.append(trunc)
             infos[idx] = info
 
+        infos['header'] = self.header.to_dict()
+
         return (
-            np.array(observations),                # (N, obs_dim)
-            np.array(rewards, dtype=np.float32),    # (N,)
-            np.array(terminated, dtype=bool),       # (N,)
-            np.array(truncated, dtype=bool),        # (N,)
+            observations,                # (N, obs_dim)
+            rewards,    # (N,)
+            terminated,        # (N,)
+            truncated,        # (N,)
             infos    
         )
 
@@ -73,25 +82,20 @@ class GymAPI_Response:
             observations.append(obs)
             infos[idx] = info
 
+        infos['header'] = self.header.to_dict()
+
         return (
-            np.array(observations),  # shape (N, obs_dim)
+            observations,  # shape (N, obs_dim)
             infos                    # list of dicts
         )
     
-    @classmethod
-    def from_dict(cls, d: dict):
-        obj = cls()
-        obj.header = ResponseHeader.from_dict(d.get("header", {}))
-        obj.feedback = [GymFeedback.from_dict(f) for f in d.get("feedback", [])]
-        return obj
 
     def __str__(self):
 
         display_response = copy.deepcopy(self.to_dict())
-        print(display_response)
 
         # Handle header.error_code nicely
-        error_value = display_response["header"]["error_code"].get("value", 0)
+        error_value = display_response["header"]["error_code"].get("value")
         display_response["header"]["error_code"]["value"] = ErrorType(error_value).name
         
 

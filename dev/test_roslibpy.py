@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# Launch on Server with:
+# ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 import roslibpy
 
 host_ip = 'localhost'

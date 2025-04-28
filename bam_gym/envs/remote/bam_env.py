@@ -9,6 +9,14 @@ from bam_gym.transport import RoslibpyTransport, CustomTransport
 from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode
 
+"""
+Provide a template and common functionality for all Bam Environments
+
+Use in child class by calling _step, _reset, _close, etc.
+
+Seperation of concerns with transport allows for roslibpy or rclpy to be used
+
+"""
 class BamEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
 

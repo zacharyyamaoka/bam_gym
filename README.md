@@ -93,6 +93,8 @@ Reccomended
 
 # Design Notes
 
+![alt text](docs/seperation_of_concerns.png)
+
 "Reward is all you need" - [Sutton & Silver](https://www.sciencedirect.com/science/article/pii/S0004370221000862)
 
 The goal of this package is to provide a light weight inerface for the BAM hardware.

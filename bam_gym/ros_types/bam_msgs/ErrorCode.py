@@ -5,10 +5,11 @@ class ErrorType(IntEnum):
     SUCCESS = 1
     FAILURE = 2
     UNABLE_TO_AQUIRE_SENSOR_DATA = 5
+    REQUEST_FAILURE = 5
 
 class ErrorCode:
-    def __init__(self):
-        self.value = ErrorType.UNDEFINED
+    def __init__(self, value=ErrorType.UNDEFINED.value):
+        self.value = value
 
     def to_dict(self):
         return {"value": int(self.value)}
@@ -16,12 +17,13 @@ class ErrorCode:
     @classmethod
     def from_dict(cls, d: dict):
         obj = cls()
-        raw_value = d.get("value", 0)
+        obj.value = d.get("value")
+
         return obj
     
     def name(self):
         """Return the name of the error (e.g., 'SUCCESS', 'FAILURE')."""
-        return self.value.name
+        return ErrorType(self.value).name
 
     def __str__(self):
-        return self.value.name
+        return (ErrorType(self.value).name, self.value)

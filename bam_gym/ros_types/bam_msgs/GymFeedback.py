@@ -32,7 +32,7 @@ class GymFeedback:
     
 
     @classmethod
-    def from_dict(cls, d: dict):
+    def from_dict(cls, d: dict): # from json dict of GymFeedback.msg
         obj = cls()
         obj.ns = d.get("ns", "")
         obj.observation = d.get("observation", [])
@@ -46,10 +46,24 @@ class GymFeedback:
         obj.info = d.get("info", "{}")
         return obj
 
+    def obs_dict(self):
+        obs_dict = {}
+        if self.observation:
+            obs_dict["obs"] = np.array(self.observation, dtype=np.float32)
+
+        if isinstance(self.color_img, np.ndarray):
+            obs_dict["color_img"] = self.color_img
+
+        if isinstance(self.depth_img, np.ndarray):
+            obs_dict["depth_img"] = self.depth_img
+
+        return obs_dict
+    
     def to_step_tuple(self):
+
         return (
-            np.array(self.observation, dtype=np.float32),
-            np.array(self.reward, dtype=np.float32),
+            self.obs_dict(),
+            self.reward,
             self.terminated,
             self.truncated,
             self.info_dump()
@@ -57,7 +71,7 @@ class GymFeedback:
 
     def to_reset_tuple(self):
         return (
-            np.array(self.observation, dtype=np.float32),
+            self.obs_dict(),
             self.info_dump()
         )
 
@@ -71,18 +85,6 @@ class GymFeedback:
         info_dict['ns'] = self.ns
         info_dict['duplicate_obs_ns'] = self.duplicate_obs_ns
         info_dict['executed'] = self.executed
-
-
-        # if it has been formated to numpy array, return it, otherwise return None
-        if hasattr(self.color_img, "shape"):
-            info_dict["color_img"] = self.color_img
-        else:
-            info_dict["color_img"] = None
-
-        if hasattr(self.depth_img, "shape"):
-            info_dict["depth_img"] = self.depth_img
-        else:
-            info_dict["depth_img"] = None
 
         return info_dict
     

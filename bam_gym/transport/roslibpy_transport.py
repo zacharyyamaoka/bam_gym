@@ -4,7 +4,7 @@ import base64
 import numpy as np
 import cv2
 from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
-from bam_gym.ros_types.bam_msgs import ErrorCode
+from bam_gym.ros_types.bam_msgs import ErrorCode, ErrorType
 
 # https://roslibpy.readthedocs.io/en/latest/examples.html
 
@@ -37,30 +37,37 @@ class RoslibpyTransport():
 
         self.service = roslibpy.Service(self.client, service_topic, service_type)
 
+    def error_response(self, msg=''):
+        response = GymAPI_Response()
+        response.header.error_code = ErrorCode(ErrorType.FAILURE.value)
+        response.header.error_msg = f"{msg}"
+        return response
+    
     def step(self, request: GymAPI_Request) -> GymAPI_Response:
         
-        # try:
-        print(request.to_dict())
         ros_request = roslibpy.ServiceRequest(request.to_dict())
 
-        ros_response = self.service.call(ros_request, timeout=self.timeout_sec)
+        try:
+            ros_response = self.service.call(ros_request, timeout=self.timeout_sec)
 
-        print("ROS RAW RESPONSE")
-        # print(ros_response)
+            if ros_response == None:
+                return self.error_response("[roslibpy_transport] No response was recivied from server")
+
+        except Exception as e:
+            print(f"[roslibpy_transport][ERROR] {e}")
+            print("[roslibpy_transport] Make sure environment is running on server")
+
+            return self.error_response(e)
 
         # TODO POPULATE RESPONSE HERE
         # Decompress image, do this in here so gym layer doesn't need to worry about it
-        # self.decompress_imgs(ros_response)
+        # Output either the numpy array or none
+        self.decompress_imgs(ros_response)
         response = GymAPI_Response.from_dict(ros_response)
+
         return response
 
-        # except Exception as e:
-        #     print(f"[ERROR] {e}")
-        #     print("Make sure environment is running on server")
-        #     response = GymAPI_Response()
-        #     # response.header.error_code = ErrorCode(ErrorCode.FAILURE)
-        #     # response.header.error_msg = f"{e}"
-        #     return response
+
         
     def decompress_imgs(self, response):
         # See: https://roslibpy.readthedocs.io/en/latest/examples/05_subscribe_to_images.html
@@ -68,13 +75,8 @@ class RoslibpyTransport():
         feedback_list = response.get('feedback', [])
 
         for feedback in feedback_list:
-            # Decompress color_img if exists
-            if isinstance(feedback.get('color_img'), dict):
-                feedback['color_img'] = self._decompress_img(feedback['color_img'])
-
-            # Decompress depth_img if exists (optional)
-            if isinstance(feedback.get('depth_img'), dict):
-                feedback['depth_img'] = self._decompress_img(feedback['depth_img'], color=False)
+            feedback['color_img'] = self._decompress_img(feedback['color_img'])
+            feedback['depth_img'] = self._decompress_img(feedback['depth_img'], color=False)
 
         # TODO UPDATE THIS TO RETURN NONE...
         return response
@@ -95,6 +97,7 @@ class RoslibpyTransport():
             else:
                 img_cv = cv2.imdecode(np_arr, cv2.IMREAD_UNCHANGED)
             return img_cv
+        
         except Exception as e:
             print(f"[ERROR decompressing image]: {e}")
             return None
