@@ -32,6 +32,14 @@ To install your new environment, run the following commands:
 1. First download repo
 - If Using ROS its reccomeded you do in different directory than bam_ws, as cd-autocomplete becomes a pain! Either in bam_ws/src/ or in other_bam_packages/
 
+2. Install depencies
+
+```
+sudo apt update
+
+sudo apt install python3-pip python3-venv
+
+```
 
 2. Install package into your virtual environment
 
@@ -39,9 +47,9 @@ To install your new environment, run the following commands:
 - If you don't have one and want to standlone test, create a new virtual env
 
 ```{shell}
-cd bam_gym_env
-python3 -m venv --copies venv
-source venv/bin/activate
+cd bam_gym
+python3 -m venv --copies .venv
+source .venv/bin/activate
 
 ```
 
@@ -49,10 +57,25 @@ Make sure your virtual env is active for the next steps
 
 Upgrade packages, then install
 
+--
+
+Determine your CUDA version and install correct torch. 
+```
+nvidia-smi
+
+python3 -m pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu124
+
+```
+
 ```{shell}
 python3 -m pip install --upgrade pip setuptools wheel build hatchling
-cd /bam_gym_env
+cd /bam_gym
 python3 -m pip install -e .
+```
+
+```
+python3 -m pip install gymnasium pygame
+
 ```
 
 Check its installed correctly into your virtual env
@@ -158,3 +181,8 @@ To verify the performance of the algorithim on completely new data, this interfa
 3. Play/Experimentation
 
     Easy to poke around, and better understand the dynamics/action/observation spaces
+
+
+# example agents
+
+Folder is at top level so it imports it the same as an external
