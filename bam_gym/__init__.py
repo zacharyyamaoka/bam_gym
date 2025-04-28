@@ -30,4 +30,8 @@ register(
     entry_point="bam_gym.envs:ClassicBandit",
 )
 
+register(
+    id="bam/ContextBandit",
+    entry_point="bam_gym.envs:ContextBandit",
+)
 

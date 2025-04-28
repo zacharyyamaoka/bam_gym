@@ -186,3 +186,22 @@ To verify the performance of the algorithim on completely new data, this interfa
 # example agents
 
 Folder is at top level so it imports it the same as an external
+
+
+# Key Idea. 
+
+First we made it look like an RL problem
+
+Now we make it look like a supervised learning problem.
+
+dataset.
+
+We train for a bit, then we update the dataset with more samples. train for a bit, and reapeat!
+
+# Saving Datasets.
+
+- Idea 1
+- Image as images in a folder, other data as a csv.
+
+Using the replaybuffer lets you do alot of other things, in terms of having ordered data, etc.
+Really this is a supervised leraning problem... How are supervised learning datasets saved? As images, actions and results... basically labels.

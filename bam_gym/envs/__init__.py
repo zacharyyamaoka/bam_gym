@@ -6,3 +6,4 @@ from bam_gym.envs.grasp_v1 import GraspV1
 from bam_gym.envs.grasp_XY import GraspXY
 
 from bam_gym.envs.classic_bandit import ClassicBandit
+from bam_gym.envs.context_bandit import ContextBandit

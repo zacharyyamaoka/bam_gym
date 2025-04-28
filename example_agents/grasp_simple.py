@@ -4,7 +4,7 @@ import gymnasium as gym
 # env = gym.make("CartPole-v1", render_mode="human")
 import bam_gym # you need to import to register
 # env = gym.make("bam/GridWorld-v0", render_mode="human")
-env = gym.make("bam/GraspXY", render_mode="human")
+env = gym.make("bam/GraspXY", num_circles=1, render_mode="human")
 
 
 observation, info = env.reset(seed=42)

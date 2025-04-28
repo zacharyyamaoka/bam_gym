@@ -14,23 +14,19 @@ class ClassicBandit(gym.Env):
         self.observation_space = spaces.Discrete(1)  # Always dummy 0
 
         self.render_mode = render_mode
+
+        self.seed = seed
         self.rng = np.random.default_rng(seed)
 
-        self.arm_thresholds = None
-        self.last_action = None
 
-    def _generate_powerlaw_thresholds(self, n_arms):
-        """Generate thresholds [0, 1] following a power law: few good, many bad."""
         exponents = self.rng.pareto(a=2.0, size=n_arms)
         exponents = np.clip(exponents, 0, 5)
         thresholds = exponents / exponents.max()
-        return thresholds
+        self.arm_thresholds = thresholds
+
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
-        self.last_action = None
-
-        self.arm_thresholds = self._generate_powerlaw_thresholds(self.n_arms)
 
         info = {}
         return 0, info
@@ -43,8 +39,6 @@ class ClassicBandit(gym.Env):
             reward = 1
         else:
             reward = -1
-
-        self.last_action = action
 
         terminated = True
         truncated = False
@@ -72,13 +66,6 @@ class ClassicBandit(gym.Env):
         plt.xlabel('Arm')
         plt.ylabel('Threshold')
         plt.title('Classic Bandit Arms: Thresholds (Power Law)')
-
-        if self.last_action is not None:
-            plt.scatter(
-                self.last_action, thresholds[self.last_action], 
-                color='red', s=100, label=f'Last Action: Arm {self.last_action}'
-            )
-            plt.legend()
 
         plt.grid(True)
         plt.show()
