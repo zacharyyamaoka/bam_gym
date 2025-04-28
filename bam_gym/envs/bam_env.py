@@ -53,6 +53,9 @@ class BamEnv(gym.Env):
 
     def _render(self):
         """"""
+        if self.render_mode == None:
+            return
+
         if len(self.response.feedback) == 0:
             print("No response recivied")
             return 
