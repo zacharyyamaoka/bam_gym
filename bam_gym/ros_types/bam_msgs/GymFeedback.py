@@ -10,7 +10,7 @@ class GymFeedback:
         self.color_img = None
         self.depth_img = None
         self.reward: float = 0.0
-        self.copy_obs_from_ns = False
+        self.duplicate_obs_ns = False
         self.executed = False
         self.terminated = False
         self.truncated = False
