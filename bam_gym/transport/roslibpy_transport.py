@@ -76,6 +76,7 @@ class RoslibpyTransport():
             if isinstance(feedback.get('depth_img'), dict):
                 feedback['depth_img'] = self._decompress_img(feedback['depth_img'], color=False)
 
+        # TODO UPDATE THIS TO RETURN NONE...
         return response
 
     def _decompress_img(self, img_data, color=True):

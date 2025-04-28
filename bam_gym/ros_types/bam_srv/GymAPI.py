@@ -3,6 +3,7 @@ from typing import List, Optional, Dict, Any
 import numpy as np
 import copy
 import json
+import array
 
 from bam_gym.ros_types.bam_msgs import RequestHeader, ResponseHeader, GymAction, GymFeedback, ErrorType
 
@@ -79,7 +80,6 @@ class GymAPI_Response:
     
     @classmethod
     def from_dict(cls, d: dict):
-        print("GYM API FROM DICT")
         obj = cls()
         obj.header = ResponseHeader.from_dict(d.get("header", {}))
         obj.feedback = [GymFeedback.from_dict(f) for f in d.get("feedback", [])]
@@ -88,24 +88,27 @@ class GymAPI_Response:
     def __str__(self):
 
         display_response = copy.deepcopy(self.to_dict())
+        print(display_response)
 
         # Handle header.error_code nicely
-        try:
-            error_value = display_response["header"]["error_code"].get("value", 0)
-            display_response["header"]["error_code"]["value"] = ErrorType(error_value).name
-        except Exception as e:
-            print(f"Warning converting error code: {e}")
+        error_value = display_response["header"]["error_code"].get("value", 0)
+        display_response["header"]["error_code"]["value"] = ErrorType(error_value).name
+        
 
         # Handle feedback images nicely
-        for f in display_response.get("feedback", []):
-            if isinstance(f.get("color_img"), dict) and "shape" in f["color_img"]:
-                f["color_img"] = f"np.ndarray{tuple(f['color_img']['shape'])}"
-            elif hasattr(f.get("color_img"), "shape"):
-                f["color_img"] = f"np.ndarray{f['color_img'].shape}"
+        for f in display_response.get("feedback"):
+            color_img = f.get("color_img")
+            if isinstance(color_img, np.ndarray):
+                f["color_img"] = f"np.ndarray{color_img.shape}"
 
-            if isinstance(f.get("depth_img"), dict) and "shape" in f["depth_img"]:
-                f["depth_img"] = f"np.ndarray{tuple(f['depth_img']['shape'])}"
-            elif hasattr(f.get("depth_img"), "shape"):
-                f["depth_img"] = f"np.ndarray{f['depth_img'].shape}"
+            depth_img = f.get("depth_img")
+            if isinstance(depth_img, np.ndarray):
+                f["depth_img"] = f"np.ndarray{depth_img.shape}"
 
+            observation = f.get("observation")
+            print(type(observation))
+            if isinstance(observation, np.ndarray):
+                f["observation"] = observation.tolist()
+            elif isinstance(observation, array.array):
+                f["observation"] = list(observation)
         return json.dumps(display_response, indent=2)

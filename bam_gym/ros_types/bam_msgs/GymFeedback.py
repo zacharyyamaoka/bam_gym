@@ -23,7 +23,7 @@ class GymFeedback:
             "color_img": self.color_img,
             "depth_img": self.depth_img,
             "reward": self.reward,
-            "copy_obs_from_ns": self.copy_obs_from_ns,
+            "duplicate_obs_ns": self.duplicate_obs_ns,
             "executed": self.executed,
             "terminated": self.terminated,
             "truncated": self.truncated,
@@ -39,7 +39,7 @@ class GymFeedback:
         obj.color_img = d.get("color_img", None)
         obj.depth_img = d.get("depth_img", None)
         obj.reward = d.get("reward", [])
-        obj.copy_obs_from_ns = d.get("copy_obs_from_ns", False)
+        obj.duplicate_obs_ns = d.get("duplicate_obs_ns", False)
         obj.executed = d.get("executed", False)
         obj.terminated = d.get("terminated", False)
         obj.truncated = d.get("truncated", False)
@@ -69,7 +69,7 @@ class GymFeedback:
             info_dict = {}
 
         info_dict['ns'] = self.ns
-        info_dict['copy_obs_from_ns'] = self.copy_obs_from_ns
+        info_dict['duplicate_obs_ns'] = self.duplicate_obs_ns
         info_dict['executed'] = self.executed
 
 

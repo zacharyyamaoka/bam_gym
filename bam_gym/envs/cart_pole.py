@@ -60,6 +60,12 @@ class CartPole(BamEnv):
 
         # convert from response into standard tuple
         response: GymAPI_Response = self._step(request)
+        print(response)
+
+        if response is None or len(response.feedback) == 0:
+            info = {"executed": False}
+            return None, None, None, None, info
+        
         feedback: GymFeedback = response.feedback[0]
 
         self._render()
