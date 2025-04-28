@@ -12,7 +12,7 @@ class RequestType(IntEnum):
     RESET = 2
     CLOSE = 3
 
-class GymAPIRequest:
+class GymAPI_Request:
     def __init__(self):
         self.header = RequestHeader()
         self.seed: int = 0
@@ -27,7 +27,7 @@ class GymAPIRequest:
             "action": [a.to_dict() for a in self.action],
         }
 
-class GymAPIResponse:
+class GymAPI_Response:
     def __init__(self):
         self.header = ResponseHeader()
         self.feedback: List[GymFeedback] = []

@@ -6,7 +6,7 @@ import numpy as np
 
 from bam_gym.envs import BamEnv
 from bam_gym.transport import RoslibpyTransport, CustomTransport
-from bam_gym.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction
 """
 Discretize grasping space
@@ -36,7 +36,7 @@ class GraspV1(BamEnv):
         self.observation_space = spaces.Box(low=0, high=255, shape=self.img_shape, dtype=np.uint8)
 
         self.env_name = "grasp_v1"
-        self.response = GymAPIResponse(dict())
+        self.response = GymAPI_Response(dict())
 
     def reset(self, seed=None, options=None):
         
@@ -49,13 +49,13 @@ class GraspV1(BamEnv):
     def step(self, action):
 
         # convert from action in request
-        request = GymAPIRequest()
+        request = GymAPI_Request()
         request.header.request_type = RequestType.STEP
         request.env_name = self.env_name
         request.discrete_action = request.ensure_list(action)
 
         # convert from response into standard tuple
-        response: GymAPIResponse = self._step(request)
+        response: GymAPI_Response = self._step(request)
 
         self._render()
 

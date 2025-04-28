@@ -6,7 +6,7 @@ import numpy as np
 import cv2
 
 from bam_gym.transport import RoslibpyTransport, CustomTransport
-from bam_gym.ros_types.bam_srv import GymAPIRequest, GymAPIResponse, RequestType
+from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode
 
 class GraspXY(gym.Env):
