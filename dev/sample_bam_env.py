@@ -6,7 +6,30 @@ from bam_gym.ros_types.bam_msgs import ErrorCode, ErrorType
 from bam_gym.transport import RoslibpyTransport
 import copy
 
+"""
+Bam Environments 
+(sequences can be variable length, but will all be the same length)
 
+Actions: Sequences of Actions (1 per arm, for retries, for different robots, etc.)
+
+Observations: Sequence of Observation, duplicate observation will be none, check the info dict
+
+Reward: Sequence of rewards. Will be 0 in case action is exectued=False
+
+Terminate: Sequence of terminated signal. For 1 step environments, don't pay attention, just manually terminate, 
+
+Info: Keys of '0','1','2', etc. for info regarding action/observation index. Key 'header' for meta info
+
+    - 'executed' - False if action didn't execute, disregard it
+    - 'duplicate_obs_ns' - True if the obs is the same as another one already in the list
+    - 'namespace' - the rack namespace this feedback belongs to
+
+--
+Design Notes:
+
+- This works nicely with the GymAPI, that accepts lists of actions returns list of feedback
+- This is a very generic API that should cover all basis!
+"""
 # First make transport, this allows it communicate with backend server
 transport = RoslibpyTransport("test_ns")
 

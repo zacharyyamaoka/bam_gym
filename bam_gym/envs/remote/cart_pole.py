@@ -8,7 +8,7 @@ import pygame
 import numpy as np
 
 # BAM
-from bam_gym.envs import BamEnv
+from bam_gym.envs.remote.bam_env import BamEnv
 from bam_gym.transport import RoslibpyTransport, CustomTransport
 from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction, GymFeedback
@@ -52,10 +52,10 @@ class CartPole(BamEnv):
             })
         )
         
-    def reset(self, seed=None, options=None):
+    def reset(self, seed=None):
 
         # Get GymAPI_Response from reset()
-        response: GymAPI_Response = self._reset(seed, options)
+        response: GymAPI_Response = self._reset(seed)
 
         # Convert to (observation, info)
         reset_tuple = response.to_reset_tuple()

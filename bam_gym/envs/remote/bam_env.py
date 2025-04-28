@@ -39,15 +39,16 @@ class BamEnv(gym.Env):
 
         self.response = GymAPI_Response()
 
-    def _reset(self, seed=None, options=None)-> GymAPI_Response:
+    def _reset(self, seed=None, request: GymAPI_Request = None)-> GymAPI_Response:
         super().reset(seed=seed) # gym docs says to do this...
 
-        request = GymAPI_Request()
+        if request == None:
+            request = GymAPI_Request()
+            if seed != None:
+                request.seed = seed
+                # Ros msg seed = 0 is no seed
+                # gym seed = None is no seed
         request.header.request_type = RequestType.RESET
-        if seed != None:
-            request.seed = seed
-            # Ros msg seed = 0 is no seed
-            # gym seed = None is no seed
         request.env_name = self.env_name
         self.response: GymAPI_Response = self.transport.step(request)
 
@@ -65,7 +66,7 @@ class BamEnv(gym.Env):
             return
 
         if len(self.response.feedback) == 0:
-            print("No response recivied")
+            print("[_render()] Cannot render as len(feedback) == 0")
             return 
                
         r = self.response.feedback[0]
@@ -108,6 +109,8 @@ class BamEnv(gym.Env):
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()
+            self.window = None
+            self.clock = None  
 
         request = GymAPI_Request()
         request.header.request_type = RequestType.CLOSE

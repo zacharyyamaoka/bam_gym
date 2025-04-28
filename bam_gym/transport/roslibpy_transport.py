@@ -51,7 +51,8 @@ class RoslibpyTransport():
             ros_response = self.service.call(ros_request, timeout=self.timeout_sec)
 
             if ros_response == None:
-                return self.error_response("[roslibpy_transport] No response was recivied from server")
+                print("[roslibpy_transport] service call return with no response")
+                return self.error_response("[roslibpy_transport] service call return with no response")
 
         except Exception as e:
             print(f"[roslibpy_transport][ERROR] {e}")

@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+"""
+Understand API for vectorized environments.
+
+- For simplicity I will use single environments, but take inspiration from this
+  ie. dicts used for info. Lists of rewards, terminated, etc.
+- For these remote environments, it's simpler to use a single environment, 
+  as there is a single step function going through a single transport API
+
+"""
 import gymnasium as gym
 import numpy as np
 env = gym.make_vec("CartPole-v1", num_envs=3, vectorization_mode="sync") 

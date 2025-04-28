@@ -10,12 +10,13 @@ import numpy as np
 import cv2
 
 # BAM
-from bam_gym.envs import BamEnv
+from bam_gym.envs.remote.bam_env import BamEnv
 
 from bam_gym.transport import RoslibpyTransport, CustomTransport
 from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
-from bam_gym.ros_types.bam_msgs import ErrorCode
+from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction
 
+from bam_gym.ros_types.utils import ensure_list
 
 
 
@@ -25,6 +26,9 @@ class GraspXYR(BamEnv):
     def __init__(self, transport, img_size=(640, 240), n_x=100, n_y=100, n_rz=16, n_obj_class=10, render_mode=None):
             
         super().__init__(transport, render_mode)
+
+        self.env_name = "grasp_xyr" # this should get overriden by child class
+
         # Rendering
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -40,7 +44,10 @@ class GraspXYR(BamEnv):
         self.n_obj_class = n_obj_class
 
         # TODO how to pass in values for multiple arms...?
-        self.action_space = spaces.MultiDiscrete([n_x, n_y, n_rz])
+
+        self.action_space = spaces.Sequence(
+            spaces.MultiDiscrete([n_x, n_y, n_rz])
+        )
 
         self.observation_space = spaces.Dict({
             "class_ids": spaces.Sequence(
@@ -75,85 +82,49 @@ class GraspXYR(BamEnv):
         # For rendering the frame
         self.surface = None
 
-    def reset(self, seed=None, options=None):
-        self._reset(seed=seed)
+    def reset(self, seed=None):
+        # Get GymAPI_Response from reset()
 
-        # Initialize circles
-        rng = np.random.default_rng(seed)
-        self.circles = []
-        for _ in range(self.num_circles):
-            x = rng.integers(self.max_radius, self.screen_width - self.max_radius)
-            y = rng.integers(self.max_radius, self.screen_height - self.max_radius)
-            r = rng.integers(self.min_radius, self.max_radius)
-            self.circles.append((x, y, r))
 
-        # Create blank frame
-        obs = self._draw_frame()
-        info = {}
+        # The Env Server will read these values to configure the enviornment
+        config_request = GymAPI_Request()
+        msg = GymAction()
+        # Put variables that change towards the ends so indexs stay more consistent
+        msg.discrete_action = [self.img_height, self.img_width, self.n_obj_class, self.n_x, self.n_y, self.n_rz]
+        config_request.action = [msg]
 
-        return obs, info
+        response: GymAPI_Response = self._reset(seed, config_request)
+
+        # Convert to (observation, info)
+        reset_tuple = response.to_reset_tuple()
+
+        self._render() # checks internally for render modes
+
+        return reset_tuple
 
     def step(self, action):
-        x_guess, y_guess = action
+        # Convert from action to GymAPI_Request
+        request = GymAPI_Request()
 
-        # Check if guess hits any circle
-        reward = -1
-        for cx, cy, cr in self.circles:
-            if np.sqrt((x_guess - cx) ** 2 + (y_guess - cy) ** 2) <= cr:
-                reward = 1
-                break
+        request.header.request_type = RequestType.STEP
+        request.env_name = self.env_name
 
-        # Always single step episode
-        terminated = True
-        truncated = False
-        info = {}
+        action_msg = GymAction()
+        # action_msg.discrete_action = ensure_list(action)
+        # request.action = [action_msg]
 
-        # Update frame without guess mark
-        obs = self._draw_frame(show_guess=None)
+        # Get response
+        response: GymAPI_Response = self._step(request)
 
-        if self.render_mode == "human":
-            self._render_frame(self._draw_frame(show_guess=(x_guess, y_guess)))
+        # Convert from GymAPI_Response to (observation, reward, terminated, truncated, info)
+        step_tuple = response.to_step_tuple()
 
-        return obs, reward, terminated, truncated, info
-        
-    
-    def _draw_frame(self, show_guess=None):
-        frame = np.full((self.screen_height, self.screen_width, 3), self.background_color, dtype=np.uint8)
+        self._render()
 
-        for cx, cy, cr in self.circles:
-            cv2.circle(frame, (cx, cy), cr, self.circle_color, -1)
-
-        # Draw guess marker if provided
-        if show_guess is not None:
-            gx, gy = show_guess
-            length = 5
-            color = (255, 255, 255)  # White
-            thickness = 1
-            cv2.line(frame, (gx - length, gy), (gx + length, gy), color, thickness)
-            cv2.line(frame, (gx, gy - length), (gx, gy + length), color, thickness)
-
-        return frame
-    
-    def _render_frame(self, frame):
-        if self.window is None:
-            pygame.init()
-            pygame.display.init()
-            self.window = pygame.display.set_mode((self.screen_width, self.screen_height))
-        if self.clock is None:
-            self.clock = pygame.time.Clock()
-
-        surface = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
-        self.window.blit(surface, (0, 0))
-        pygame.display.update()
-        pygame.event.pump()
-        self.clock.tick(self.metadata["render_fps"])
+        return step_tuple
 
     def render(self):
-        # Render latest frame
-        if self.surface is not None:
-            self._render_frame(self.surface)
+        return self._render(self)
 
     def close(self):
-        if self.window is not None:
-            pygame.display.quit()
-            pygame.quit()
+        return self._close()

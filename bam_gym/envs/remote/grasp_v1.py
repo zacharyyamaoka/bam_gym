@@ -4,7 +4,7 @@ from gymnasium import spaces
 import pygame
 import numpy as np
 
-from bam_gym.envs import BamEnv
+from bam_gym.envs.remote.bam_env import BamEnv
 from bam_gym.transport import RoslibpyTransport, CustomTransport
 from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction
