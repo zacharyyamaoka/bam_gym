@@ -27,7 +27,7 @@ class GraspXYR(BamEnv):
             
         super().__init__(transport, render_mode)
 
-        self.env_name = "grasp_xyr" # this should get overriden by child class
+        self.env_name = "GraspXYR" 
 
         # Rendering
         assert render_mode is None or render_mode in self.metadata["render_modes"]
@@ -50,9 +50,8 @@ class GraspXYR(BamEnv):
         )
 
         self.observation_space = spaces.Dict({
-            "class_ids": spaces.Sequence(
-                spaces.Discrete(self.n_obj_class)
-            ),
+            # Class Ids to Pick
+            "target_ids": spaces.Sequence(spaces.Discrete(self.n_obj_class)),
             "obs": spaces.Box(
                 low=np.array([-4.8, -np.inf, -0.418, -np.inf], dtype=np.float32),
                 high=np.array([4.8, np.inf, 0.418, np.inf], dtype=np.float32),
@@ -70,12 +69,16 @@ class GraspXYR(BamEnv):
                 shape=(self.img_height, self.img_width, 1),   # (H, W, 1) for single channel
                 dtype=np.float32
             ),
-            "seg": spaces.Box(
-                low=0,
-                high=255,  # typically segmentation mask is uint8, 0-255
-                shape=(self.img_height, self.img_width, 1),   # (H, W, 1)
-                dtype=np.uint8
-            ),
+            "seg_ids": spaces.Sequence(spaces.Discrete(self.n_obj_class)),
+
+            # List of Polygons: list of (x, y) vertices
+            "seg_mask": spaces.Sequence(
+                spaces.Box(
+                    low=np.array([0, 0], dtype=np.uint8),
+                    high=np.array([self.img_width, self.img_height], dtype=np.uint8),
+                    dtype=np.float32
+                )   
+            )
         })
 
 

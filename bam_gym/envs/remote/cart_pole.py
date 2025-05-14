@@ -28,7 +28,7 @@ class CartPole(BamEnv):
             
         super().__init__(transport, render_mode)
 
-        self.env_name = "cart_pole"
+        self.env_name = "CartPole"
 
         self.action_space = spaces.Sequence(
             spaces.Discrete(2)  # Each action is still "Left" (0) or "Right" (1)

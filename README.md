@@ -3,12 +3,85 @@
 Light weight package for bam gym environments
 
 - Control remote gym environments running rosbridge_server using roslibpy
-
 - Idea is that anyone can download this package and rapidly start developing with the familar gym api
-
 - These environments can quickly tested on a ros free workspace, or also be wrapped by a ros server node 
 
-### Environments
+## Acceptance Tests
+
+- `test_local_gym.py` ✅
+    - Verify you can play local gym envs locally
+
+*require remote env to be running*
+
+```ros2 launch bam_core_bringup gym_env.launch.py env:=CartPole```
+
+- `test_roslibpy.py` ✅
+    - Checks that a connection can be made to remote robot
+
+- `test_remote_gym.py` ✅
+    - Verify you can play cartpole remotely
+
+- `test_random_agent.py -e GraspXYR` ❌
+    - Verify that random actions work
+    - See robot move in Foxglove
+    - See robot observations in Local pygame
+
+- `test_simple_v1_agent.py -e GraspXYR` ❌
+    - Verify that simple heuristic agent works and rewards
+    - See robot move in Foxglove
+    - See robot observations in Local pygame
+
+## Environments
+
+#### Pick and Place
+
+These enviornments parametrize a robot that does simple pick and place (robotics 2.0)
+
+- The agent is a robot rack
+- To control an entire row of robots, you can parralelize the env
+- It picks up and item, and then it throws/places it at another location (Could be a machine, inside a bin, etc)
+- This Env type can be used for many applications. No need to make a new Env for each application
+
+###### Action Space:
+
+- Send a List of Grasps.
+- Grasps are represented by 7 DOF vector
+    - Position (X, Y, Z)
+    - Orientation (Rx, Ry, Rz)
+    - Grasp Width
+
+- List Length is nominally (1-8):
+    - 1 - 4 Target Grasps for 1-4 arms
+    - Grasp Retries
+    - Multiple arm grasps and grasp retries are handled in the same way (One Obs Out -> 1-8 Actions In -> 1-8 Rewards + 1 Obs)
+    - The grasp approach, and where/how the item is placed is controled by the env/app config.
+
+- Can be extended to add more way points for controlling approach, etc. if desired
+
+
+###### Observation Space:
+
+- RGBD + Segmentation Image
+
+###### Reward:
+
+- 1 if grasp was succesful
+- 0 otherwise
+
+Speed of execution etc is control be robotics 2.0. Following Andy Leung and using a probability of success seems like a good approach.
+
+
+
+###### Env Names
+
+- `GraspXYR`
+- `GraspXYRW`
+- `GraspXYZRRRW`
+
+---
+
+Observation Space
+
 
 This repository hosts the examples that are shown [on the environment creation documentation](https://gymnasium.farama.org/tutorials/gymnasium_basics/environment_creation/).
 

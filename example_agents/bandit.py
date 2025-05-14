@@ -13,7 +13,7 @@ saver = SampleSaver("/home/bam/other_bam_packages/bam_gym/dataset",
                  )
 
 observation, info = env.reset()
-# env.render()
+env.render()
 
 for _ in range(1000):
     # action = policy(observation)
