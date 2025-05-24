@@ -33,7 +33,13 @@ Light weight package for bam gym environments
 
 ## Environments
 
-#### Pick and Place
+- Before there was an idea to have a unique environment for each customer/application/etc. 
+- Instead I now prefer to have a more general environment
+- There are many, many things you would consider in a pick and place env...
+
+- Before I wanted to send discrete variables, but now I want the interface to be richer
+
+#### `PickAndPlace`
 
 These enviornments parametrize a robot that does simple pick and place (robotics 2.0)
 
@@ -41,22 +47,30 @@ These enviornments parametrize a robot that does simple pick and place (robotics
 - To control an entire row of robots, you can parralelize the env
 - It picks up and item, and then it throws/places it at another location (Could be a machine, inside a bin, etc)
 - This Env type can be used for many applications. No need to make a new Env for each application
+- Should be easy to use for Agent. Default case is to just send pose you want it to grasp at. Do I want the ML engineer to think about where to drop of the items?
+- Hmmm.. its a bit of added complexity, but I think its important. Otherwise core gets a bit to complicated.
 
+- Parameterize motion with waypoints and params
 ###### Action Space:
 
-- Send a List of Grasps.
 - Grasps are represented by 7 DOF vector
     - Position (X, Y, Z)
     - Orientation (Rx, Ry, Rz)
     - Grasp Width
 
-- List Length is nominally (1-8):
+- Pick List - len (1-8):
     - 1 - 4 Target Grasps for 1-4 arms
     - Grasp Retries
     - Multiple arm grasps and grasp retries are handled in the same way (One Obs Out -> 1-8 Actions In -> 1-8 Rewards + 1 Obs)
     - The grasp approach, and where/how the item is placed is controled by the env/app config.
 
-- Can be extended to add more way points for controlling approach, etc. if desired
+- Place Length (1 - 4)
+ 
+- Other params
+    - Throw, etc.
+    - Expected obj class
+
+- Can be extended to add more way points for controlling approach, etc. if desired (that would be a new environment though)
 
 
 ###### Observation Space:
@@ -77,6 +91,12 @@ Speed of execution etc is control be robotics 2.0. Following Andy Leung and usin
 - `GraspXYR`
 - `GraspXYRW`
 - `GraspXYZRRRW`
+
+###### Psuedo Code
+
+
+
+
 
 ---
 
