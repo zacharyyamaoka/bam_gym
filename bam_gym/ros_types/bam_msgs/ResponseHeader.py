@@ -5,12 +5,14 @@ class ResponseHeader:
         self.duration: float = 0.0
         self.error_code = ErrorCode()
         self.error_msg = ""
+        self.calibrated = False
 
     def to_dict(self):
         return {
             "duration": self.duration,
             "error_code": self.error_code.to_dict(),
             "error_msg": self.error_msg,
+            "calibrated": self.calibrated,
         }
 
     @classmethod

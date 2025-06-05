@@ -9,40 +9,6 @@ from bam_gym.ros_types.geometry_msgs.Polygon import Polygon
 from bam_gym.ros_types.vision_msgs.Detection2D import Detection2D
 from bam_gym.ros_types.vision_msgs.ObjectHypothesisWithPose import ObjectHypothesisWithPose
 
-action = GymAction()
-action.pose_action = [PoseStamped()]
-action.pose_param = [WaypointParams()]
-# print("\n\nGymAction")
-# print(json.dumps(action.to_dict(), indent=2))
-
-feedback = GymFeedback()
-detection = Detection2D()
-detection.results = [ObjectHypothesisWithPose()]
-feedback.detections = [detection]
-mask = Polygon()
-mask.points = [Point()]
-feedback.masks = [mask]
-
-# print("\n\nfeedback")
-# print(json.dumps(action.to_dict(), indent=2))
-
-request = GymAPI_Request()
-request.action = [action]
-# print("\n\nGymAPI_Request")
-# print(json.dumps(request.to_dict(), indent=2))
-
-response = GymAPI_Response()
-response.feedback = [feedback]
-# print("\n\nGymAPI_Response")
-# print(json.dumps(response.to_dict(), indent=2))
-
-src = GymAPI_Request()
-for field in vars(src):
-    print(field)
-    value = getattr(src, field)
-    print(value)
-
-
 from typing import Any
 
 def is_basic(value):
@@ -113,21 +79,34 @@ copy_fields(src, dst)
 print(PoseStamped().to_dict())
 print(dst.to_dict())
 
-src = PoseStamped()
-src.header.frame_id = "test"
-src.header.stamp.nanosec = 1
-src.header.stamp.sec = 1
+action = GymAction()
+action.pose_action = [PoseStamped()]
+action.pose_param = [WaypointParams()]
 
-src.pose.orientation.x = 1
-src.pose.orientation.y = 1
-src.pose.orientation.z = 1
-src.pose.orientation.w = 1
+request = GymAPI_Request()
+request.action = [action]
 
-src.pose.position.x = 1
-src.pose.position.y = 1
-src.pose.position.z = 1
-dst = PoseStamped()
+dst = GymAPI_Request()
 print(dst.to_dict())
-copy_fields(src, dst)
+copy_fields(request, dst)
 print(PoseStamped().to_dict())
 print(dst.to_dict())
+
+
+
+# feedback = GymFeedback()
+# detection = Detection2D()
+# detection.results = [ObjectHypothesisWithPose()]
+# feedback.detections = [detection]
+# mask = Polygon()
+# mask.points = [Point()]
+# feedback.masks = [mask]
+
+# response = GymAPI_Response()
+# response.feedback = [feedback]
+
+# src = PoseStamped()
+
+
+
+

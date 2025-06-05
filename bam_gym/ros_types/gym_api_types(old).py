@@ -107,7 +107,7 @@ class GymAction:
                  ns: str = "",
                  prefix: str = "",
                  discrete_action: List[int] = None,
-                 contious_action: List[float] = None,
+                 continuous_action: List[float] = None,
                  pose_action: List[PoseStamped] = None,
                  parameters: List[WaypointParams] = None,
                  rank: int = 0,
@@ -117,7 +117,7 @@ class GymAction:
         self.ns = ns
         self.prefix = prefix
         self.discrete_action = ensure_list(discrete_action)
-        self.contious_action = ensure_list(contious_action)
+        self.continuous_action = ensure_list(continuous_action)
         self.pose_action = ensure_list(pose_action) 
         self.parameters = ensure_list(parameters) 
         self.rank = rank
@@ -129,7 +129,7 @@ class GymAction:
             "ns": self.ns,
             "prefix": self.prefix,
             "discrete_action": self.discrete_action,
-            "contious_action": self.contious_action,
+            "continuous_action": self.continuous_action,
             "pose_action": self.pose_action, # assumed to already be dictionaries
             "parameters": [param.to_dict() for param in self.parameters],
             "rank": self.rank,

@@ -7,7 +7,7 @@ import cv2
 
 from bam_gym.transport import RoslibpyTransport, CustomTransport
 from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
-from bam_gym.ros_types.bam_msgs import ErrorCode
+from bam_gym.ros_types.bam_msgs import ErrorCode, ErrorType
 
 """
 Provide a template and common functionality for all Bam Environments
@@ -36,8 +36,12 @@ class BamEnv(gym.Env):
         # Go for stateless design
         # self.request =  GymAPI_Request()
         self.transport = transport
-
         self.response = GymAPI_Response()
+
+    @property
+    def success(self) -> bool:
+        return self.response.header.error_code.value == ErrorType.SUCCESS
+        # return self.transport.success
 
     def _reset(self, seed=None, request: GymAPI_Request = None)-> GymAPI_Response:
         super().reset(seed=seed) # gym docs says to do this...
@@ -76,7 +80,7 @@ class BamEnv(gym.Env):
         
         # Convert BGR to RGB for PyGame
         # rgb_image = cv2.cvtColor(r.color_img, cv2.COLOR_BGR2RGB)
-        rgb_image = r.color_img
+        rgb_image = r.color_img.data
         if not hasattr(rgb_image, "shape"):
             print("Cannot render, empty color image")
             return

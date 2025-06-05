@@ -58,11 +58,11 @@ class CartPole(BamEnv):
         response: GymAPI_Response = self._reset(seed)
 
         # Convert to (observation, info)
-        reset_tuple = response.to_reset_tuple()
+        (observations, infos) = response.to_reset_tuple()
 
         self._render() # checks internally for render modes
 
-        return reset_tuple
+        return (observations, infos)
     
     def step(self, action):
 
@@ -80,11 +80,11 @@ class CartPole(BamEnv):
         response: GymAPI_Response = self._step(request)
 
         # Convert from GymAPI_Response to (observation, reward, terminated, truncated, info)
-        step_tuple = response.to_step_tuple()
+        (observations, rewards, terminated, truncated, infos) = response.to_step_tuple()
 
         self._render()
 
-        return step_tuple
+        return (observations, rewards, terminated, truncated, infos)
     
     def render(self):
         return self._render(self)

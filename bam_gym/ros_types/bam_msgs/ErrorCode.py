@@ -26,4 +26,5 @@ class ErrorCode:
         return ErrorType(self.value).name
 
     def __str__(self):
-        return (ErrorType(self.value).name, self.value)
+        return f"{(ErrorType(self.value).name, self.value)}"
+    

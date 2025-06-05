@@ -184,6 +184,16 @@ Reccomended
 - Do all the development inside the standalone env, to make sure your not dependening on any ROS this
 - Update and pull changes to the ROS workspace as needed
 
+Updated: June 4 2025
+    - Just install it once in the a /python_ws
+    - then install into into ros virtual env with
+    - installation is with -e (editable), so you can adjust as needed!
+
+```{shell}
+python3 -m pip install -e /home/bam/python_ws/bam_gym
+
+```
+
 # Design Notes
 
 ![alt text](docs/seperation_of_concerns.png)

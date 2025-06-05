@@ -86,7 +86,7 @@ class GymAPI_Response:
 
         return (
             observations,  # shape (N, obs_dim)
-            infos                    # list of dicts
+            infos          # list of dicts
         )
     
 
