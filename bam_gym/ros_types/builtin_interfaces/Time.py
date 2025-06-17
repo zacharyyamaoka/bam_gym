@@ -8,3 +8,7 @@ class Time:
             "sec": self.sec,
             "nanosec": self.nanosec,
         }
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls(sec=d.get("sec", 0), nanosec=d.get("nanosec", 0))

@@ -12,7 +12,7 @@ import cv2
 # BAM
 from bam_gym.envs.remote.bam_env import BamEnv
 
-from bam_gym.transport import RoslibpyTransport, CustomTransport
+from bam_gym.transport import RoslibpyTransport, MockTransport
 from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction
 

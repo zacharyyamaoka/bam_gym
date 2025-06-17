@@ -11,3 +11,10 @@ class Pose2D:
             "position": self.position.to_dict(),
             "theta": self.theta
         }
+    
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls()
+        obj.position = Point2D.from_dict(d.get("position", {}))
+        obj.theta = d.get("theta", 0.0)
+        return obj

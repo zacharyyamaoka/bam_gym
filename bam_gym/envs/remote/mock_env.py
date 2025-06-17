@@ -15,27 +15,23 @@ from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction, GymFeedback
 from bam_gym.ros_types.utils import ensure_list
 
 """
-In here we wrap the GymAPI functionality and present a familar interface to other gym environments
-
-Go from normal gym to Ros Transport
+Mock Env doesn't require any server to be running. Use this during testing
 
 """
-
-class CartPole(BamEnv):
+class MockEnv(BamEnv):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
 
-    def __init__(self, transport, render_mode=None):
+    def __init__(self, transport, render_mode=None,  **kwargs):
             
-        super().__init__(transport, render_mode=render_mode)
+        # override the transport with MockTransport()
+        super().__init__(MockTransport(), render_mode)
 
-        self.env_name = "CartPole"
+        self.env_name = "MockEnv"
 
         self.action_space = spaces.Sequence(
             spaces.Discrete(2)  # Each action is still "Left" (0) or "Right" (1)
         )
 
-        # If request succesful, then return an observation for each action
-        # the dict can be empty, the the indexes should always line up!
         self.observation_space = spaces.Sequence(
             spaces.Dict({
                 "obs": spaces.Box(
@@ -52,42 +48,12 @@ class CartPole(BamEnv):
             })
         )
         
-    def reset(self, seed=None):
-
-        # Get GymAPI_Response from reset()
-        response: GymAPI_Response = self._reset(seed)
-
-        # Convert to (observation, info)
-        (observations, infos) = response.to_reset_tuple()
-
-        self._render() # checks internally for render modes
-
-        return (observations, infos)
-    
     def step(self, action):
 
-        # Convert from action to GymAPI_Request
-        request = GymAPI_Request()
+        response: GymAPI_Response = self._step(GymAPI_Request())
 
-        request.header.request_type = RequestType.STEP
-        request.env_name = self.env_name
-
-        action_msg = GymAction()
-        action_msg.discrete_action = ensure_list(action)
-        request.action = [action_msg]
-
-        # Get response
-        response: GymAPI_Response = self._step(request)
-
-        # Convert from GymAPI_Response to (observation, reward, terminated, truncated, info)
         (observations, rewards, terminated, truncated, infos) = response.to_step_tuple()
-
-        self._render()
 
         return (observations, rewards, terminated, truncated, infos)
     
-    def render(self):
-        return self._render(self)
 
-    def close(self):
-        return self._close()

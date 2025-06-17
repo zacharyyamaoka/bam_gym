@@ -11,3 +11,9 @@ class Polygon:
         return {
             "points": [p.to_dict() for p in self.points],
         }
+    
+    @classmethod
+    def from_dict(cls, d: dict):
+        points_data = d.get("points", [])
+        points = [Point.from_dict(p) for p in points_data]
+        return cls(points=points)

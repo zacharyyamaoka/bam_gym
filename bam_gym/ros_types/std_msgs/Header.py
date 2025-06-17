@@ -11,3 +11,8 @@ class Header:
             "frame_id": self.frame_id,
         }
     
+    @classmethod
+    def from_dict(cls, d: dict):
+        stamp = Time.from_dict(d.get("stamp", {})) #empty dict otherwise
+        frame_id = d.get("frame_id", "")
+        return cls(stamp=stamp, frame_id=frame_id)

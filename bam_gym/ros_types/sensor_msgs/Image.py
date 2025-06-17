@@ -30,3 +30,17 @@ class Image:
             "data": self.data,
         }
     
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls()
+        obj.header = Header.from_dict(d.get("header", {}))
+
+        obj.height = d.get("height", 0)
+        obj.width = d.get("width", 0)
+
+        obj.encoding = d.get("encoding", "")
+        
+        obj.is_bigendian = d.get("is_bigendian", 0)
+        obj.step = d.get("step", 0)
+        obj.data = d.get("data", [])
+        return obj

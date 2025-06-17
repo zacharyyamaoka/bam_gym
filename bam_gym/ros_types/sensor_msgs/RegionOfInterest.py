@@ -17,3 +17,13 @@ class RegionOfInterest:
             "width": self.width,
             "do_rectify": self.do_rectify,
         }
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls()
+        obj.x_offset = d.get("x_offset", 0)
+        obj.y_offset = d.get("y_offset", 0)
+        obj.height = d.get("height", 0)
+        obj.width = d.get("width", 0)
+        obj.do_rectify = d.get("do_rectify", False)
+        return obj

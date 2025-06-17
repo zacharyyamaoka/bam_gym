@@ -14,3 +14,11 @@ class BoundingBox2D:
             "size_y": self.size_y
 
         }
+    
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls()
+        obj.center = Pose2D.from_dict(d.get("center", {}))
+        obj.size_x = d.get("size_x", 0.0)
+        obj.size_y = d.get("size_y", 0.0)
+        return obj

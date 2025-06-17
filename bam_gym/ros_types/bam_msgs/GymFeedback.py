@@ -29,7 +29,9 @@ class GymFeedback:
         self.detections: List[Detection2D] = []
         self.masks: List[Polygon] = []
 
-        self.duplicate_obs_ns = False
+        self.duplicate_obs = False
+        self.duplicate_index: int = 0
+
         self.executed = False
         self.reward: float = 0.0
         self.terminated = False
@@ -54,7 +56,9 @@ class GymFeedback:
             "detections": [d.to_dict() for d in self.detections],
             "masks": [m.to_dict() for m in self.masks],
 
-            "duplicate_obs_ns": self.duplicate_obs_ns,
+            "duplicate_obs": self.duplicate_obs,
+            "duplicate_index": self.duplicate_index,
+
             "executed": self.executed,
             "reward": self.reward,
             "terminated": self.terminated,
@@ -72,17 +76,19 @@ class GymFeedback:
         obj.observation = d.get("observation", [])
 
         obj.pose_names = d.get("pose_names", [])
-        obj.pose = d.get("pose", [])
+        obj.pose = [PoseStamped.from_dict(p) for p in d.get("pose", [])]
         obj.target_class = d.get("target_class", [])
 
-        obj.color_img = d.get("color_img", None)
-        obj.depth_img = d.get("depth_img", None)
-        obj.camera_info = d.get("camera_info", None)
+        obj.color_img = CompressedImage.from_dict(d["color_img"]) if "color_img" in d else CompressedImage()
+        obj.depth_img = Image.from_dict(d["depth_img"]) if "depth_img" in d else Image()
+        obj.camera_info = CameraInfo.from_dict(d["camera_info"]) if "camera_info" in d else CameraInfo()
 
-        obj.detections = d.get("detections", [])
-        obj.masks = d.get("masks", [])
+        obj.detections = [Detection2D.from_dict(det) for det in d.get("detections", [])]
+        obj.masks = [Polygon.from_dict(poly) for poly in d.get("masks", [])]
 
-        obj.duplicate_obs_ns = d.get("duplicate_obs_ns", False)
+        obj.duplicate_obs = d.get("duplicate_obs", False)
+        obj.duplicate_index = d.get("duplicate_index", 0)
+
         obj.executed = d.get("executed", False)
         obj.reward = d.get("reward", 0.0)
         obj.terminated = d.get("terminated", False)
@@ -92,28 +98,45 @@ class GymFeedback:
         return obj
 
     def obs_dict(self):
+        """
+        Design Notes:
+
+        - right now I prefer to return the actual types, althought they don't align with the observation space,
+        - it gives type completion, which I think will be more helpful!
+        """
         obs_dict = {}
         if self.observation:
-            obs_dict["obs"] = (self.observation_names, np.array(self.observation, dtype=np.float32))
+            obs_dict["obs_names"] = self.observation_names 
+            obs_dict["obs"] = np.array(self.observation, dtype=np.float32)
 
         if self.pose:
-            obs_dict["pose"] = (self.pose_names, self.pose)
+            obs_dict["pose_names"] = self.pose_names
+            obs_dict["pose"] = [pose_stamped.to_dict() for pose_stamped in self.pose]
+            # obs_dict["pose"] = [pose_stamped.pose for pose_stamped in self.pose] I want the pose stamped to send as the action
+            # obs_dict["pose"] = [pose_stamped.pose.to_dict() for pose_stamped in self.pose]
+            # obs_dict["pose"] = self.pose # to return pose stamped....
 
         if isinstance(self.color_img.data, np.ndarray):
+            # obs_dict["color_img"] = self.color_img
             obs_dict["color_img"] = self.color_img.data
+            # obs_dict["color_img"] = self.color_img.to_dict()
 
         if isinstance(self.depth_img.data, np.ndarray):
             obs_dict["depth_img"] = self.depth_img.data
+            # obs_dict["depth_img"] = self.depth_img.to_dict()
 
         if self.camera_info is not None:
+            # obs_dict["camera_info"] = self.camera_info.to_dict()
             obs_dict["camera_info"] = self.camera_info
 
         if self.detections:
             obs_dict["detections"] = self.detections
+            # obs_dict["detections"] = [d.to_dict() for d in self.detections]
 
         if self.masks:
             obs_dict["masks"] = self.masks
-        
+            # obs_dict["masks"] = [m.to_dict() for m in self.masks]
+
         return obs_dict
     
     def to_step_tuple(self):
@@ -139,8 +162,15 @@ class GymFeedback:
             print("Warning: Failed to parse info JSON:", e)
             info_dict = {}
 
+        # add other values here that may be useful to know!
+        # and are not returned by default in observation, reward, etc..
+        # generally you want to make all variables accesible.... 
+
         info_dict['ns'] = self.ns
-        info_dict['duplicate_obs_ns'] = self.duplicate_obs_ns
+        info_dict['duplicate_obs'] = self.duplicate_obs
+        info_dict['duplicate_index'] = self.duplicate_index
+        info_dict['target_class'] = self.target_class
+
         info_dict['executed'] = self.executed
 
         return info_dict

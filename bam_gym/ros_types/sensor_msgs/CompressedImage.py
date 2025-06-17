@@ -16,3 +16,10 @@ class CompressedImage:
             "data": self.data,
         }
     
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls()
+        obj.header = Header.from_dict(d.get("header", {}))
+        obj.format = d.get("format", "None")
+        obj.data = d.get("data", [])
+        return obj

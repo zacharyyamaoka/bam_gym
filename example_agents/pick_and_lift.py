@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+"""
+1. Mock Testing
+
+    - Launch gym env in mock mode, then everything should technically work to start!
+
+"""
 import gymnasium as gym
 from bam_gym.envs import CartPole, GraspXYR
 from bam_gym.ros_types.bam_msgs import ErrorCode, ErrorType
@@ -21,7 +27,7 @@ for _ in range(100):
     action = env.action_space.sample(mask=(1,None)) # Mask sequence to len(1)
     new_observation, reward, terminated, truncated, info = env.step(action)
 
-    # print_step_result(observation, action, reward, terminated, truncated, info)
+    print_step_result(observation, action, reward, terminated, truncated, info)
     observation = new_observation
 
     # Handle error - Simulated environments always return observations, but sometimes
@@ -32,8 +38,7 @@ for _ in range(100):
         continue
 
     # No need to reset as env auto resets
-    if False and (terminated[0] or truncated[0]):
-        print("Reseting")
+    if True and (terminated[0] or truncated[0]):
         observation, info = env.reset()
 
 print(env.action_space)

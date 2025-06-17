@@ -5,6 +5,7 @@ import numpy as np
 import cv2
 from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode, ErrorType
+import json
 
 # https://roslibpy.readthedocs.io/en/latest/examples.html
 
@@ -45,6 +46,7 @@ class RoslibpyTransport():
     
     def step(self, request: GymAPI_Request) -> GymAPI_Response:
         
+        # Convert GymAPI_Request -> Roslibpy Request (excepts a json)
         ros_request = roslibpy.ServiceRequest(request.to_dict())
 
         try:
@@ -60,43 +62,41 @@ class RoslibpyTransport():
 
             return self.error_response(e)
 
+        # Roslibpy Response to Convert GymAPI_Response 
+
         # TODO POPULATE RESPONSE HERE
         # Decompress image, do this in here so gym layer doesn't need to worry about it
         # Output either the numpy array or none
-        self.decompress_imgs(ros_response)
         response = GymAPI_Response.from_dict(ros_response)
+        self.decompress_imgs(response) # update in place
 
         return response
 
 
         
-    def decompress_imgs(self, response):
+    def decompress_imgs(self, response: GymAPI_Response):
         # See: https://roslibpy.readthedocs.io/en/latest/examples/05_subscribe_to_images.html
         # https://answers.ros.org/question/333329/
-        feedback_list = response.get('feedback', [])
+        # Updates images in place
 
-        for feedback in feedback_list:
-            feedback['color_img'] = self._decompress_img(feedback['color_img'])
-            feedback['depth_img'] = self._decompress_img(feedback['depth_img'], color=False)
+        for feedback in response.feedback:
+            if len(feedback.color_img.data) > 0:
+                feedback.color_img.data = self.img_data_decode(feedback.color_img.data) 
 
-        # TODO UPDATE THIS TO RETURN NONE...
-        return response
+            if len(feedback.depth_img.data) > 0:
+                   feedback.depth_img.data =  self.img_data_decode(feedback.depth_img.data, color=False)
 
-    def _decompress_img(self, img_data, color=True):
-        """Helper to decompress a single CompressedImage dict."""
-        if img_data is None or 'data' not in img_data:
-            return None
 
-        if len(img_data['data']) == 0:
-            return None
+    def img_data_decode(self, img_data: str, color=True):
+        """Helper to decompress a single CompressedImage dict. Cannot use CV bridge"""
 
         try:
-            decoded_bytes = base64.b64decode(img_data['data'].encode('ascii'))
+            decoded_bytes = base64.b64decode(img_data.encode('ascii'))
             np_arr = np.frombuffer(decoded_bytes, dtype=np.uint8)
             if color:
                 img_cv = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-            else:
-                img_cv = cv2.imdecode(np_arr, cv2.IMREAD_UNCHANGED)
+            else: #depth
+                img_cv = cv2.imdecode(np_arr, cv2.IMREAD_UNCHANGED)/1000.0
             return img_cv
         
         except Exception as e:

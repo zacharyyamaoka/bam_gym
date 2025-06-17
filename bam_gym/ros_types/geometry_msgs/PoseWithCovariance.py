@@ -12,3 +12,9 @@ class PoseWithCovariance:
             "pose": self.pose.to_dict(),
             "covariance": self.covariance,
         }
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls()
+        obj.pose = Pose.from_dict(d.get("pose", {}))
+        obj.covariance = d.get("covariance", [0.0] * 36)
+        return obj

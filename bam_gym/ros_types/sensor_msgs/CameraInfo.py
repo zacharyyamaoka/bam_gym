@@ -40,3 +40,21 @@ class CameraInfo:
             "binning_y": self.binning_y,
             "roi": self.roi.to_dict(),
         }
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls()
+        obj.header = Header.from_dict(d.get("header", {}))
+        obj.height = d.get("height", 0)
+        obj.width = d.get("width", 0)
+
+        obj.distortion_model = d.get("distortion_model", "")
+        obj.d = d.get("d", [])
+        obj.k = d.get("k", [0.0] * 9)
+        obj.r = d.get("r", [0.0] * 9)
+        obj.p = d.get("p", [0.0] * 12)
+
+        obj.binning_x = d.get("binning_x", 0)
+        obj.binning_y = d.get("binning_y", 0)
+        obj.roi = RegionOfInterest.from_dict(d.get("roi", {}))
+        return obj

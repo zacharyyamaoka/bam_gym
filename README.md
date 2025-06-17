@@ -1,10 +1,109 @@
-# Design Notes
+# Bam Gym
 
-Light weight package for bam gym environments
+<img src="docs/system_design_v1_june_17_2025.jpg" alt="alt text" width="800"/>
+
+## Goals
+
+- Light weight, ROS free package, that provides gym api to BAM products
+- Show how Waste sorting -> RL -> Supervised learning
 
 - Control remote gym environments running rosbridge_server using roslibpy
 - Idea is that anyone can download this package and rapidly start developing with the familar gym api
 - These environments can quickly tested on a ros free workspace, or also be wrapped by a ros server node 
+- This is the key API from which top level requirements flow down, then you can go into the weeds in Bam Core to implement the functionality
+- We should always have a baseline which is a randomly moving robot
+- Should enable ML/AI specialistic, with limited experince with ROS/hardware/low level control/C++ to rapidly develop algortihims and control the product
+- Quickly test model on new data, collect datasets, get a feel for the problem
+- Can connect to any Bam robot in the world/lab if you know the ip+port, and gym env that is running
+- The top level example should be super simple, like 50 lines of code, similar to the gym examples
+
+What is the agent? (aka lego, in a [How Big Things Get Done](https://timharford.com/2023/02/what-lego-can-teach-us-about-saving-the-planet/) sense)
+- A robot rack. It's a self contained unit, with sensors, actuators, computer, needed to accomplish goals.
+
+## Functional Requirements
+
+
+
+Future Functinality
+- [ ] Control world via Roslibpy 
+- [ ] Reconfigure robot/env via api
+
+## Design Parameters
+
+### What goes inside the agent?
+
+- Neural nets, Software 3.0 Code, Feedforward networks that map from observation to action
+- High level coordination strategies for determining which object to pick
+
+- Helper functions for:
+    - Saving transitions to database
+    - Dealing with async reward futures
+    - Vizualisation of observations (I can likely do this in a way that simplifies if it goes to pygame or foxglove)
+
+### Todo 
+
+June 2025 - Working towards first deployment of learning robot
+- You have the robot setup, now just play the gym game!
+- [ ] Cartpole example 
+- [ ] Bam API Render mode human
+- [ ] Random actions 
+- [ ] Baseline solution for reference 
+- [ ] Conv solution for ref. (no I will leave that to someone else)
+- [ ] Python + jupyter cookbook examples 
+
+
+### Gym Envs
+
+Goal with the local gym enviornments is to provide a illustration of how the BAM remote environments are similar/different to classical gym environments and 
+supervised learning. Also fast/repeatable baselines that can be run when prototyping on models. No need to worry about connecting to a real agent. Can potetailly incorperate data from a very wide number of agent to get a better evaluation as well.
+
+Local
+- CartPole
+    - Classic baseline environment
+    - http://joschu.net/docs/nuts-and-bolts.pdf
+    - http://joschu.net/blog/opinionated-guide-ml-research.html
+    - https://karpathy.github.io/2019/04/25/recipe/
+
+- Mnist
+    - baseline image enviornment
+    - Link to that page about RL -> supervised learning
+- CIFAR-10
+    - harder image environment
+- Grasp Net 1 billon
+    - Full grasping supervised learning problem
+- BAM offline dataset
+
+Remote
+- PickAndLift
+    - Indiscrimenate grasping
+    - Similar to classic research: https://research.google/blog/deep-learning-for-robots-learning-from-large-scale-interaction/
+    - Robot Classroom: https://rl-at-scale.github.io/
+
+
+## Risks/Counter Measures
+
+Why will I fail?
+
+- Moving to slowly
+    - Try to accomplish in an hour what would take you a day, in a day what would take you a week
+
+## References
+
+- BAM
+    - [On Landfills and Bandits](https://www.canva.com/design/DAGfSm-pHFs/FYOadwZK48Q7wnUkWjxOSw/edit?utm_content=DAGfSm-pHFs&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
+
+- Google
+    - [2016 Sergey Learning Hand Eye @ Google](https://research.google/blog/deep-learning-for-robots-learning-from-large-scale-interaction/)
+    - [RL at Scale](https://rl-at-scale.github.io/)
+
+- [Andy Zeng](https://andyzeng.github.io/)
+    - [Cloud folding](https://sites.google.com/berkeley.edu/cloudfolding)
+
+- [Berkley Blue Python API](https://github.com/berkeleyopenarms/blue_interface?tab=readme-ov-file)
+- [Ray RLLib External Env](https://docs.ray.io/en/latest/rllib/external-envs.html)
+- [Moteus Python Lib](https://github.com/mjbots/moteus/tree/main/lib/python)
+- ROS2 Transport layer design
+- [Open AI Gym API](https://gymnasium.farama.org/)
 
 ## Acceptance Tests
 
@@ -310,3 +409,5 @@ We train for a bit, then we update the dataset with more samples. train for a bi
 
 Using the replaybuffer lets you do alot of other things, in terms of having ordered data, etc.
 Really this is a supervised leraning problem... How are supervised learning datasets saved? As images, actions and results... basically labels.
+
+- Could look at how replay buffers are saved. there is some work on that, or look at how image datasets are saved... I think its more similar for now!

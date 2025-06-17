@@ -22,3 +22,12 @@ class Detection2D:
             "id": self.id,
 
         }
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls()
+        obj.header = Header.from_dict(d.get("header", {}))
+        obj.results = [ObjectHypothesisWithPose.from_dict(r) for r in d.get("results", [])]
+        obj.bbox = BoundingBox2D.from_dict(d.get("bbox", {}))
+        obj.id = d.get("id", "")
+        return obj

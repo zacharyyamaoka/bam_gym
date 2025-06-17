@@ -11,3 +11,9 @@ class PoseStamped:
             "header": self.header.to_dict(),
             "pose": self.pose.to_dict(),
         }
+    
+    @classmethod
+    def from_dict(cls, d: dict):
+        header = Header.from_dict(d.get("header",{})) # may not have header though
+        pose = Pose.from_dict(d["pose"]) # throw error if no pose
+        return cls(header=header, pose=pose)

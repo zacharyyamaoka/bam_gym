@@ -15,3 +15,10 @@ class ObjectHypothesisWithPose:
             "hypothesis": self.hypothesis.to_dict(),
             "pose": self.pose.to_dict(),
         }
+    
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls()
+        obj.hypothesis = ObjectHypothesis.from_dict(d.get("hypothesis", {}))
+        obj.pose = PoseWithCovariance.from_dict(d.get("pose", {}))
+        return obj

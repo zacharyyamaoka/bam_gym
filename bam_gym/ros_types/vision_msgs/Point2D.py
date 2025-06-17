@@ -10,3 +10,10 @@ class Point2D:
             "x": self.x,
             "y": self.y,
         }
+    
+    @classmethod
+    def from_dict(cls, d: dict):
+        obj = cls()
+        obj.x = d.get("x", 0.0)
+        obj.y = d.get("y", 0.0)
+        return obj
