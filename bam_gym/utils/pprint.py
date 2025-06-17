@@ -17,7 +17,7 @@ def recursive_format(obj):
     else:
         return describe_ndarray(obj)
 
-def print_step_result(observation, action, reward, terminated, truncated, info):
+def print_step_result(i, observation, action, reward, terminated, truncated, info):
     display_obs = recursive_format(copy.deepcopy(observation))
     display_info = recursive_format(copy.deepcopy(info))
 
@@ -28,7 +28,7 @@ def print_step_result(observation, action, reward, terminated, truncated, info):
     except Exception:
         pass  # Gracefully skip if structure doesn't match
 
-    print(f"\nStep Result:")
+    print(f"\n[{i}] Step Result:")
     print(f"Action: {action}")
     print(f"Observation: {display_obs}")
     print(f"Reward: {reward}")

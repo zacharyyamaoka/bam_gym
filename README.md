@@ -44,7 +44,7 @@ Future Functinality
 
 June 2025 - Working towards first deployment of learning robot
 - You have the robot setup, now just play the gym game!
-- [ ] Cartpole example 
+- [X] Cartpole local + remote example 
 - [ ] Bam API Render mode human
 - [ ] Random actions 
 - [ ] Baseline solution for reference 

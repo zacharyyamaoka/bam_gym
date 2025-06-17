@@ -1,5 +1,23 @@
 #!/usr/bin/env python3
 
+"""
+Provide a template and common functionality for all Bam Environments
+
+- For all common classes, there is a step() [external] and _step() [internal]
+- The step, reset, close, etc. provide a good basic template for what the functions can look like
+- The _step, _reset, _close, etc. provide basic functinoality for dealing with GymAPI - don't override these.
+- To create a custom env, you just need to provide a thin wrapper that customizes the BamEnv as needed
+
+Transports are injected into the env.
+- This 'seperation of concerns' allows for different transports, roslibpy, rclpy, mock, etc. to be used
+
+GUI should be injected into env.
+- Right now its pygame, but It should be able to use pygame, or foxglove, etc. or mabye its simpler to just have pygame? 
+- This is not critical can come later as needed
+
+TODO:
+- Support a vectorize flag, to switch between working with a single agent to many
+"""
 
 # BAM
 from bam_gym.transport import RoslibpyTransport, MockTransport
@@ -16,14 +34,7 @@ import numpy as np
 import cv2
 
 from typing import Tuple, List, Dict
-"""
-Provide a template and common functionality for all Bam Environments
 
-Use in child class by calling _step, _reset, _close, etc.
-
-Seperation of concerns with transport allows for roslibpy or rclpy to be used
-
-"""
 class BamEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
 
@@ -48,7 +59,8 @@ class BamEnv(gym.Env):
 
         # Params from pygame rendering
         # Env's can always implement their own custom game, 
-        # but idea is to provide a basic GUI for viewing images
+        # but idea is to provide a basic GUI for viewing BamAPI
+        # Use observation space flags from __init__ to config GUI
         self.window = None
         self.clock = None
 
@@ -61,6 +73,7 @@ class BamEnv(gym.Env):
         # GymAPI defines standard observation space, any env will be a subset of these:
         # If request succesful, then return an observation for each action
         # the dict can be empty, the the indexes should always line up!
+        # For now I will not dot he same for Action Space as that is more custom for each environment
         observation_dict = spaces.Dict({})
 
         if obs:
@@ -87,7 +100,7 @@ class BamEnv(gym.Env):
         # return self.transport.success
 
     def reset(self, seed=None) -> Tuple[List, Dict]:
-        """ Default reset() override if desired"""
+        """ Default reset(). Should work for most envs, but you can override if desired"""
 
         # Get GymAPI_Response from reset()
         response: GymAPI_Response = self._reset(seed)
@@ -100,6 +113,7 @@ class BamEnv(gym.Env):
         return (observations, infos)
     
     def _reset(self, seed=None, request: GymAPI_Request = None)-> GymAPI_Response:
+        """ Helper function that should be called by reset()"""
         super().reset(seed=seed) # gym docs says to do this...
 
         if request == None:
@@ -115,9 +129,14 @@ class BamEnv(gym.Env):
         return self.response
     
     def step(self, action: spaces.Sequence) -> Tuple[List, List, List, List, Dict]:
+        """
+        To be implemented in parent class.
+        - Take a action of type (spaces) and fill a GymAPI_Request msg
+        """
         assert False, "Implement this is parent class"
 
     def _step(self, request: GymAPI_Request) -> GymAPI_Response:
+        """ Helper function that should be called by step()"""
         request.header.request_type = RequestType.STEP
         request.env_name = self.env_name
         self.response: GymAPI_Response = self.transport.step(request)

@@ -27,7 +27,7 @@ for _ in range(100):
     action = env.action_space.sample(mask=(1,None)) # Mask sequence to len(1)
     new_observation, reward, terminated, truncated, info = env.step(action)
 
-    print_step_result(observation, action, reward, terminated, truncated, info)
+    print_step_result(_, observation, action, reward, terminated, truncated, info)
     observation = new_observation
 
     # Handle error - Simulated environments always return observations, but sometimes

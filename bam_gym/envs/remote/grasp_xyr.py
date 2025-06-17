@@ -16,7 +16,7 @@ from bam_gym.transport import RoslibpyTransport, MockTransport
 from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction
 
-from bam_gym.ros_types.utils import ensure_list
+from bam_gym.utils.utils import ensure_list
 
 
 

@@ -12,7 +12,7 @@ from bam_gym.envs.remote.bam_env import BamEnv
 from bam_gym.transport import RoslibpyTransport, MockTransport
 from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction, GymFeedback
-from bam_gym.ros_types.utils import ensure_list
+from bam_gym.utils.utils import ensure_list
 
 """
 Mock Env doesn't require any server to be running. Use this during testing

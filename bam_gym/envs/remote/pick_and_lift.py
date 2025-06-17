@@ -9,7 +9,7 @@ from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction, GymFeedback
 from bam_gym.ros_types.geometry_msgs import PoseStamped, Pose
 from bam_gym.utils.parameters import get_default_params
 
-from bam_gym.ros_types.utils import ensure_list
+from bam_gym.utils.utils import ensure_list
 
 from bam_gym.envs import custom_spaces
 

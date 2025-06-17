@@ -12,7 +12,7 @@ from bam_gym.envs.remote.bam_env import BamEnv
 from bam_gym.transport import RoslibpyTransport, MockTransport
 from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
 from bam_gym.ros_types.bam_msgs import ErrorCode, GymAction, GymFeedback
-from bam_gym.ros_types.utils import ensure_list
+from bam_gym.utils.utils import ensure_list
 
 """
 In here we wrap the GymAPI functionality and present a familar interface to other gym environments
@@ -34,8 +34,7 @@ class CartPole(BamEnv):
             spaces.Discrete(2)  # Each action is still "Left" (0) or "Right" (1)
         )
 
-        # If request succesful, then return an observation for each action
-        # the dict can be empty, the the indexes should always line up!
+        # Define custom observation space. It does not really matter, not used for much tbh..
         self.observation_space = spaces.Sequence(
             spaces.Dict({
                 "obs": spaces.Box(
@@ -51,18 +50,18 @@ class CartPole(BamEnv):
                 ),
             })
         )
-        
-    def reset(self, seed=None):
+    # Already implemented in BamEnv      
+    # def reset(self, seed=None):
 
-        # Get GymAPI_Response from reset()
-        response: GymAPI_Response = self._reset(seed)
+    #     # Get GymAPI_Response from reset()
+    #     response: GymAPI_Response = self._reset(seed)
 
-        # Convert to (observation, info)
-        (observations, infos) = response.to_reset_tuple()
+    #     # Convert to (observation, info)
+    #     (observations, infos) = response.to_reset_tuple()
 
-        self._render() # checks internally for render modes
+    #     self._render() # checks internally for render modes
 
-        return (observations, infos)
+    #     return (observations, infos)
     
     def step(self, action):
 
@@ -74,6 +73,8 @@ class CartPole(BamEnv):
 
         action_msg = GymAction()
         action_msg.discrete_action = ensure_list(action)
+        action_msg.discrete_names = ['action']
+
         request.action = [action_msg]
 
         # Get response
@@ -86,8 +87,9 @@ class CartPole(BamEnv):
 
         return (observations, rewards, terminated, truncated, infos)
     
-    def render(self):
-        return self._render(self)
+    # Already implemented in BamEnv      
+    # def render(self):
+    #     return self._render(self)
 
-    def close(self):
-        return self._close()
+    # def close(self):
+    #     return self._close()
