@@ -4,12 +4,10 @@ from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestTy
 from bam_gym.ros_types.bam_msgs import ErrorCode, ErrorType, GymFeedback
 
 class MockTransport():
-    def __init__(self):
-        pass
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
 
     def step(self, request: GymAPI_Request) -> GymAPI_Response:
-
-     
         response = GymAPI_Response()
         response.header.error_code.value = ErrorType.SUCCESS
         response.header.error_msg = "dummy msg from mock transport"

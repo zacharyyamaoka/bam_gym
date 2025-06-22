@@ -10,6 +10,7 @@ from bam_gym.ros_types.vision_msgs.Detection2D import Detection2D
 from bam_gym.ros_types.sensor_msgs.Image import Image
 from bam_gym.ros_types.sensor_msgs.CompressedImage import CompressedImage
 from bam_gym.ros_types.sensor_msgs.CameraInfo import CameraInfo
+from bam_gym.ros_types.bam_msgs.Segment2DArray import Segment2DArray
 
 class GymFeedback:
     def __init__(self):
@@ -22,12 +23,10 @@ class GymFeedback:
 
         self.target_class: List[int] = []
 
-        self.color_img: CompressedImage = CompressedImage()
-        self.depth_img: Image = Image()
-        self.camera_info: CameraInfo = CameraInfo()
-
-        self.detections: List[Detection2D] = []
-        self.masks: List[Polygon] = []
+        self.color_img: List[CompressedImage] = []
+        self.depth_img: List[Image] = []
+        self.camera_info: List[CameraInfo] = []
+        self.segments: List[Segment2DArray] = []
 
         self.duplicate_obs = False
         self.duplicate_index: int = 0
@@ -49,12 +48,10 @@ class GymFeedback:
 
             "target_class": self.target_class,
 
-            "color_img": self.color_img.to_dict(),
-            "depth_img": self.depth_img.to_dict(),
-            "camera_info": self.camera_info.to_dict(),
-
-            "detections": [d.to_dict() for d in self.detections],
-            "masks": [m.to_dict() for m in self.masks],
+            "color_img": [img.to_dict() for img in self.color_img],
+            "depth_img": [img.to_dict() for img in self.depth_img],
+            "camera_info": [ci.to_dict() for ci in self.camera_info],
+            "segments": [seg.to_dict() for seg in self.segments],
 
             "duplicate_obs": self.duplicate_obs,
             "duplicate_index": self.duplicate_index,
@@ -79,12 +76,10 @@ class GymFeedback:
         obj.pose = [PoseStamped.from_dict(p) for p in d.get("pose", [])]
         obj.target_class = d.get("target_class", [])
 
-        obj.color_img = CompressedImage.from_dict(d["color_img"]) if "color_img" in d else CompressedImage()
-        obj.depth_img = Image.from_dict(d["depth_img"]) if "depth_img" in d else Image()
-        obj.camera_info = CameraInfo.from_dict(d["camera_info"]) if "camera_info" in d else CameraInfo()
-
-        obj.detections = [Detection2D.from_dict(det) for det in d.get("detections", [])]
-        obj.masks = [Polygon.from_dict(poly) for poly in d.get("masks", [])]
+        obj.color_img = [CompressedImage.from_dict(img) for img in d.get("color_img", [])]
+        obj.depth_img = [Image.from_dict(img) for img in d.get("depth_img", [])]
+        obj.camera_info = [CameraInfo.from_dict(ci) for ci in d.get("camera_info", [])]
+        obj.segments = [Segment2DArray.from_dict(seg) for seg in d.get("segments", [])]
 
         obj.duplicate_obs = d.get("duplicate_obs", False)
         obj.duplicate_index = d.get("duplicate_index", 0)
@@ -116,26 +111,18 @@ class GymFeedback:
             # obs_dict["pose"] = [pose_stamped.pose.to_dict() for pose_stamped in self.pose]
             # obs_dict["pose"] = self.pose # to return pose stamped....
 
-        if isinstance(self.color_img.data, np.ndarray):
+        if isinstance(self.color_img, list) and all(isinstance(img, np.ndarray) for img in self.color_img):
             # obs_dict["color_img"] = self.color_img
-            obs_dict["color_img"] = self.color_img.data
+            obs_dict["color_img"] = [img.data for img in self.color_img]
             # obs_dict["color_img"] = self.color_img.to_dict()
 
-        if isinstance(self.depth_img.data, np.ndarray):
-            obs_dict["depth_img"] = self.depth_img.data
+        if isinstance(self.depth_img, list) and all(isinstance(img, np.ndarray) for img in self.depth_img):
+            obs_dict["depth_img"] = [img.data for img in self.depth_img]
             # obs_dict["depth_img"] = self.depth_img.to_dict()
 
         if self.camera_info is not None:
             # obs_dict["camera_info"] = self.camera_info.to_dict()
             obs_dict["camera_info"] = self.camera_info
-
-        if self.detections:
-            obs_dict["detections"] = self.detections
-            # obs_dict["detections"] = [d.to_dict() for d in self.detections]
-
-        if self.masks:
-            obs_dict["masks"] = self.masks
-            # obs_dict["masks"] = [m.to_dict() for m in self.masks]
 
         return obs_dict
     
@@ -181,11 +168,11 @@ class GymFeedback:
         display_feedback = copy.deepcopy(self.to_dict())
 
         # Replace color_img and depth_img with shape info
-        if isinstance(self.color_img.data, np.ndarray):
-            display_feedback["color_img"] = f"np.ndarray{self.color_img.data.shape}"
+        if isinstance(self.color_img, list) and all(isinstance(img, np.ndarray) for img in self.color_img):
+            display_feedback["color_img"] = [f"np.ndarray{img.data.shape}" for img in self.color_img]
 
-        if isinstance(self.depth_img.data, np.ndarray):
-            display_feedback["depth_img"] = f"np.ndarray{self.depth_img.data.shape}"
+        if isinstance(self.depth_img, list) and all(isinstance(img, np.ndarray) for img in self.depth_img):
+            display_feedback["depth_img"] = [f"np.ndarray{img.data.shape}" for img in self.depth_img]
 
 
         return json.dumps(display_feedback, indent=2)

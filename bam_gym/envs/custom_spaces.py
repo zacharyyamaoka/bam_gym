@@ -1,4 +1,3 @@
-
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
@@ -160,3 +159,21 @@ def mask_space(max_size=(600, 480)):
     })
 
     return space
+
+def segment2d_space():
+    return spaces.Dict({
+        "header": spaces.Dict({}),  # You can further specify fields if needed
+        "results": spaces.Sequence(spaces.Dict({})),  # ObjectHypothesisWithPose
+        "bbox": spaces.Dict({}),
+        "id": spaces.Text(max_length=64),
+        "polygon": spaces.Sequence(spaces.Dict({})),  # Polygon
+        "mask": spaces.Dict({}),  # Image
+        "img_height": spaces.Box(low=0, high=2**16-1, shape=(), dtype=int),
+        "img_width": spaces.Box(low=0, high=2**16-1, shape=(), dtype=int),
+    })
+
+def segment2darray_space():
+    return spaces.Dict({
+        "header": spaces.Dict({}),
+        "segments": spaces.Sequence(segment2d_space()),
+    })

@@ -45,7 +45,7 @@ class BamEnv(gym.Env):
                  obs = False,
                  color = False,
                  depth = False,
-                 detections = False,
+                 detection = False,
                  pose = False,
 
                  # Misc
@@ -85,12 +85,12 @@ class BamEnv(gym.Env):
             observation_dict["depth"] = custom_spaces.depth_img_space()
         if color or depth:
             observation_dict["camera_info"] = custom_spaces.camera_info_space()
-        if detections:
-            observation_dict["detections"] = spaces.Sequence(custom_spaces.detection_space())
-            observation_dict["masks"] = spaces.Sequence(custom_spaces.mask_space())
         if pose:
             observation_dict["pose_names"] = spaces.Sequence(spaces.Text(max_length=32))
             observation_dict["pose"] = spaces.Sequence(custom_spaces.pose_space())
+        # Add segments to observation space
+        if detection:
+            observation_dict["segments"] = spaces.Sequence(custom_spaces.segment2darray_space())
 
         self.observation_space = spaces.Sequence(observation_dict)
 
@@ -157,23 +157,21 @@ class BamEnv(gym.Env):
             return 
                
         r = self.response.feedback[0]
-        if r.color_img is None:
-            print("No color image recivied")
+        # Handle color_img as a list of images
+        if len(r.color_img) == 0:
+            print("No color images received")
             return 
-        
-        # Convert BGR to RGB for PyGame
-        # rgb_image = cv2.cvtColor(r.color_img, cv2.COLOR_BGR2RGB)
-        rgb_image = r.color_img.data
-        if not hasattr(rgb_image, "shape"):
-            print("Cannot render, empty color image")
+
+        # Use the first image in the list for rendering
+        # it should be decompressed already by the transport
+        img0 = r.color_img[0]
+        rgb_image = img0.data
+        if not isinstance(rgb_image, np.ndarray):
+            print(f"Cannot render, not valid image data type {type(rgb_image)}")
             return
         
         if self.render_mode == "human":
             # print("Render mode Human")
-
-            # Flip vertically if needed (OpenCV and PyGame may have different origins)
-            # rgb_image = np.flipud(rgb_image)
-            
             height, width, _ = rgb_image.shape
 
             if self.window is None:

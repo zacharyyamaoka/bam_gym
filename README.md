@@ -40,17 +40,58 @@ Future Functinality
     - Dealing with async reward futures
     - Vizualisation of observations (I can likely do this in a way that simplifies if it goes to pygame or foxglove)
 
+### Viz
+
+How to get 80% of the result for 20% of the work?
+- The idea is to have a light weight viewer
+
+- For full 3D representation with points, clouds URDFs, that update, etc. then your looking at using foxglove
+- Just to introspect the data
+- v1 Print out the response
+- v2 is Matplotlib the data
+- v3 mabye like pygame, where it updates contiously so you can see how it evolves...
+
 ### Todo 
 
 June 2025 - Working towards first deployment of learning robot
 - You have the robot setup, now just play the gym game!
 - [X] Cartpole local + remote example 
 - [ ] Bam API Render mode human
+    I really like how I can build up the application, step by step
+    gz sim conveyor_box_world.sdf
+    ros2 launch bam_gz_bringup gz.launch.py world:=conveyor_box_world.sdf spawn_robot:=false gazebo_gui:=false
+    ros2 launch bam_core_bringup cameras.launch.py plugin:=real
+    ros2 run bam_camera camera_server_node.py --ros-args -r __ns:=/bam_GPU
+    ros2 launch bam_core_bringup gym_env.launch.py env:=ObsEnv plugin:=mock
+
+    ros2 run bam_ros_obj_detection gz_obj_detection_server --ros-args -r __ns:=/bam_GPU -p use_sim_time:=true
+    ros2 run bam_camera camera_server --ros-args -r __ns:=/bam_GPU -p use_sim_time:=true -p segments:=false
+    ros2 run bam_camera debug_camera_server --ros-args -r __ns:=/bam_GPU -p use_sim_time:=true
+    ros2 launch bam_camera rs_intra_process_launch.py
+
+    ros2 run bam_ros_gym gym_env_node.py --ros-args -p env:=ObsEnv -r __ns:=/bam_GPU -p use_sim_time:=true
+
+ros2 launc 
 - [ ] Random actions 
 - [ ] Baseline solution for reference 
 - [ ] Conv solution for ref. (no I will leave that to someone else)
 - [ ] Python + jupyter cookbook examples 
 
+
+### Message Design
+
+Ok so I have the transport, that communicates with GymAPI message format.
+
+- So that I can potetially run the gym anywhere! even on a Ros Free system, remotely, etc. I have defined the types seperatly
+- Ugh yes, roslibpy sucks, so my ideas of controlling it like that for now are not going to work
+- Let me keep it for now, I have the tester to check the types so its not that bad...
+- Gym should return a dictionary, that you can easily convert back into the type, and back agian... or mabye it should just return the type? doesn't really matter. for now I can return the dictionary so its more inline with gym, even though that doesn't really mater...
+- Its fairly easy to just use chat GPT to generate the custom spaces.... it doesn't really help though. I agree,
+- You can use it for sampling the observation space... I haven't used that yet... hmm its fairly easy to switch between tbh.
+- Keep it as simple as possible zach!
+
+Anything that comes out of the gym API, it should be as a step tuple, and it should be in numpy arrays...
+- Grasp should be able to directly take the images, etc.. how to represent image segmentations, etc? this is why its starting to get very expensive to have these spaces.... sv.Detections?
 
 ### Gym Envs
 

@@ -80,27 +80,39 @@ class RoslibpyTransport():
         # Updates images in place
 
         for feedback in response.feedback:
-            if len(feedback.color_img.data) > 0:
-                feedback.color_img.data = self.img_data_decode(feedback.color_img.data) 
+            # Decompress all color images in the list
+            for img in feedback.color_img:
+                if isinstance(img.data, str) and len(img.data) > 0:
+                    img.data = self.img_data_decode(img.data, img_type="color")
+            # Decompress all depth images in the list
+            for img in feedback.depth_img:
+                if isinstance(img.data, str) and len(img.data) > 0:
+                    img.data = self.img_data_decode(img.data, img_type="depth")
+            # Decompress mask images in all segments (Segment2DArray)
+            for seg_array in feedback.segments:
+                for seg in seg_array.segments:
+                    if isinstance(seg.mask.data, str) and len(seg.mask.data) > 0:
+                        seg.mask.data = self.img_data_decode(seg.mask.data, img_type="mask")
 
-            if len(feedback.depth_img.data) > 0:
-                   feedback.depth_img.data =  self.img_data_decode(feedback.depth_img.data, color=False)
 
-
-    def img_data_decode(self, img_data: str, color=True):
-        """Helper to decompress a single CompressedImage dict. Cannot use CV bridge"""
-
+    def img_data_decode(self, img_data: str, img_type="color"):
+        """Helper to decompress a single image string. img_type: 'color', 'depth', or 'mask'."""
         try:
             decoded_bytes = base64.b64decode(img_data.encode('ascii'))
             np_arr = np.frombuffer(decoded_bytes, dtype=np.uint8)
-            if color:
+            if img_type == "color":
                 img_cv = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-            else: #depth
-                img_cv = cv2.imdecode(np_arr, cv2.IMREAD_UNCHANGED)/1000.0
+            elif img_type == "depth":
+                img_cv = cv2.imdecode(np_arr, cv2.IMREAD_UNCHANGED) 
+                if isinstance(img_cv, np.ndarray):
+                    img_cv/= 1000.0
+            elif img_type == "mask":
+                img_cv = cv2.imdecode(np_arr, cv2.IMREAD_UNCHANGED)
+            else:
+                raise ValueError(f"Unknown img_type: {img_type}")
             return img_cv
-        
         except Exception as e:
-            print(f"[ERROR decompressing image]: {e}")
+            print(f"[ERROR decompressing {img_type}]: {e}")
             return None
         
     def close(self):
@@ -120,4 +132,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-        
