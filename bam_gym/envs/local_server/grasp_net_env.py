@@ -52,8 +52,8 @@ class GraspNetEnv(gym.Env):
                  finger_height = 100/1000, # (meters) from finger tip to palm
                  finger_thickness = 15/1000, # (meters) from inside surface to outside surface
                  max_width = 0.1, # (meters) max grasp width
-                 random_scene_order = True,
-                 random_ann_order = True,
+                 random_scene_order = False,
+                 random_ann_order = False,
                  render_mode = None,
                  vec = False,
                  seed = None):
@@ -62,8 +62,12 @@ class GraspNetEnv(gym.Env):
             graspnet_root: Path to the GraspNet dataset root directory.
         """
         super().__init__()
+        print("[UNCONFIGURED] GraspNetEnv")
+
         self.camera = camera
         self.graspnet = GraspNetEval(graspnet_root, camera, split)
+        self.graspnet.checkDataCompleteness()
+        print("[SUCCESS] Data check complete")
         self.render_mode = render_mode
         self.vec = vec
         self.vis = False
@@ -115,6 +119,7 @@ class GraspNetEnv(gym.Env):
         self.action_space = spaces.Sequence(
             spaces.Box(-1, 1, shape=(7,), dtype=np.float32)
         )
+        print("[READY] GraspNetEnv")
 
     def reset_scene_order(self):
         self.scene_order = self.scene_ids.copy()
