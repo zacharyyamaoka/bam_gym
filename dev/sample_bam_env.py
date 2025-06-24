@@ -2,7 +2,7 @@
 
 import gymnasium as gym
 from bam_gym.envs import CartPole
-from bam_gym.ros_types.bam_msgs import ErrorCode, ErrorType
+from ros_py_types.bam_msgs import ErrorCode, ErrorType
 from bam_gym.transport import RoslibpyTransport
 import copy
 

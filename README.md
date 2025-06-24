@@ -98,6 +98,22 @@ Anything that comes out of the gym API, it should be as a step tuple, and it sho
 Goal with the local gym enviornments is to provide a illustration of how the BAM remote environments are similar/different to classical gym environments and 
 supervised learning. Also fast/repeatable baselines that can be run when prototyping on models. No need to worry about connecting to a real agent. Can potetailly incorperate data from a very wide number of agent to get a better evaluation as well.
 
+
+Gym clients are defined by their action and observation spaces, not by the values that those spaces take. They use `Transports` 
+they don't implement the backend themselves
+
+Gym Servers are do implement the backend them selves. If you want to use with a client they should match the action/observation space
+
+Remote Gym Servers are in `bam_ros_gym` package
+
+Local Gym server, Can be used directly with no client, can be used via client and `TransportLocal`, can be used remotely if wrapped in a `bam_ros_gym` env
+    
+I am ok with gyms using ros types and other pure python packages... as long as you don't use 
+
+GOOD: grasp_net_api <-> python_ws(its ok to share) -> bam_ws (and can import)
+
+BAD, circular dependencies! don't do this: bam_ws -> python_ws 
+
 Local
 - CartPole
     - Classic baseline environment
@@ -147,6 +163,21 @@ Why will I fail?
 - [Open AI Gym API](https://gymnasium.farama.org/)
 
 ## Acceptance Tests
+
+
+
+Interesting bug!
+
+Cartpole was randomly running.... this runs in the background when you update/save your worksapce to make sure it has the latest tests
+
+python -m pytest -p vscode_pytest --collect-only
+
+
+Vs code has testing support:
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+
+Solution for now is to rename `test_` to `check_`. Leave test for actual test files!
 
 - `test_local_gym.py` ✅
     - Verify you can play local gym envs locally

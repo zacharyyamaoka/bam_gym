@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from bam_gym.ros_types.bam_msgs import WaypointParams
+from ros_py_types.bam_msgs import WaypointParams
 
 """
 Copied from bam_moveit/bam_moveit_client/bam_moveit_client/msg_factory.py

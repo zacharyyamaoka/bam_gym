@@ -2,7 +2,7 @@
 
 import gymnasium as gym
 import bam_gym
-from bam_gym.ros_types.bam_msgs import ErrorCode
+from ros_py_types.bam_msgs import ErrorCode
 from bam_gym.transport import RoslibpyTransport
 import copy
 

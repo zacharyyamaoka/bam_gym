@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import json
-from bam_gym.ros_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
-from bam_gym.ros_types.bam_msgs import GymAction, GymFeedback, WaypointParams
-from bam_gym.ros_types.geometry_msgs.Point import Point
-from bam_gym.ros_types.geometry_msgs.PoseStamped import PoseStamped
-from bam_gym.ros_types.geometry_msgs.Polygon import Polygon
-from bam_gym.ros_types.vision_msgs.Detection2D import Detection2D
-from bam_gym.ros_types.vision_msgs.ObjectHypothesisWithPose import ObjectHypothesisWithPose
+from ros_py_types.bam_srv import GymAPI_Request, GymAPI_Response, RequestType
+from ros_py_types.bam_msgs import GymAction, GymFeedback, WaypointParams
+from ros_py_types.geometry_msgs.Point import Point
+from ros_py_types.geometry_msgs.PoseStamped import PoseStamped
+from ros_py_types.geometry_msgs.Polygon import Polygon
+from ros_py_types.vision_msgs.Detection2D import Detection2D
+from ros_py_types.vision_msgs.ObjectHypothesisWithPose import ObjectHypothesisWithPose
 
 action = GymAction()
 action.pose_action = [PoseStamped()]

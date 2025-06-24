@@ -1,6 +1,6 @@
 import copy
 import numpy as np
-from bam_gym.ros_types.bam_msgs import ErrorType
+from ros_py_types.bam_msgs import ErrorType
 from gymnasium import spaces
 import json
 

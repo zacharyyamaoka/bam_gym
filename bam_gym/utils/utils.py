@@ -1,4 +1,4 @@
-from bam_gym.ros_types.bam_msgs import ErrorCode, ErrorType
+from ros_py_types.bam_msgs import ErrorCode, ErrorType
 
 def ensure_list(var):
     if var is None:
