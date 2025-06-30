@@ -21,42 +21,52 @@ You can use inheritance if you want... but sometimes its nice to just keep thing
 # BAM
 
 from bam_utils.pointcloud import plane_2_depth_vectorized
-from bam_utils.time_helper import Timer
+from bam_utils.time_helper import StopWatch
+from bam_utils.transforms import xyzrpy_to_matrix, matrix_to_xyzrpy
+from bam_utils.o3d_helper import O3DViewer
 
+
+import graspnetAPI.utils
+import graspnetAPI.utils.utils
 from ros_py_types.bam_srv import GymAPI_Response
 from ros_py_types.bam_msgs import GymFeedback, Segment2DArray
-
 from ros_py_types.sensor_msgs import Image, CompressedImage, CameraInfo
-
 from ros_py_types.converter import mask_img_to_segment2D_list
 
-TIMER = Timer(verbose=False)
+from bam_gym.envs import custom_spaces
+
+TIMER = StopWatch(verbose=False)
 
 # PYTHON
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 import open3d as o3d
-from graspnetAPI import GraspNet, GraspNetEval, GraspGroup, Grasp
+# careful for bam Grasp and Graspnet Grasp...
+import graspnetAPI 
 import cv2
 from transforms3d.euler import euler2mat
+from typing import List
 
 class GraspNetEnv(gym.Env):
     metadata = {"render_modes": ["human"], "render_fps": 2}
-
+    
+    # TODO right now matching these to the collision values used in Collision checker
     def __init__(self,
                  graspnet_root: str,
                  camera = 'realsense',
                  split = 'train',
-                 finger_depth = 20/1000, # (meters) from front to back side 
-                 finger_height = 100/1000, # (meters) from finger tip to palm
-                 finger_thickness = 15/1000, # (meters) from inside surface to outside surface
+                 finger_width = 20/1000, # (meters) from front to back side 
+                 finger_height = 60/1000, # (meters) from finger tip to palm
+                 finger_thickness = 10/1000, # (meters) from inside surface to outside surface
                  max_width = 0.1, # (meters) max grasp width
                  random_scene_order = False,
                  random_ann_order = False,
                  render_mode = None,
                  vec = False,
-                 seed = None):
+                 seed = None,
+                 friction_threshold = -1, # grasps above this fail
+                 ):
         """
         Args:
             graspnet_root: Path to the GraspNet dataset root directory.
@@ -65,20 +75,24 @@ class GraspNetEnv(gym.Env):
         print("[UNCONFIGURED] GraspNetEnv")
 
         self.camera = camera
-        self.graspnet = GraspNetEval(graspnet_root, camera, split)
+        self.root = graspnet_root
+        self.graspnet = graspnetAPI.GraspNetEval(graspnet_root, camera, split)
         self.graspnet.checkDataCompleteness()
         print("[SUCCESS] Data check complete")
         self.render_mode = render_mode
         self.vec = vec
         self.vis = False
+        self.viewer = None
         if self.render_mode == "human":
+            self.viewer = O3DViewer(cam_pos=[0, 0, 0], lookat=[0, 0, 0.4])
             self.vis = True
 
-        self.finger_depth = finger_depth
+        self.finger_width = finger_width
         self.finger_height = finger_height
         self.finger_thickness = finger_thickness
         self.max_width = max_width
 
+        self.friction_threshold = friction_threshold
 
         self.random_scene_order = random_scene_order
         self.random_ann_order = random_ann_order
@@ -107,18 +121,29 @@ class GraspNetEnv(gym.Env):
         self.img_height = 720  # Example image height
         self.img_width = 1280   # Example image width
         # Example observation space: color, depth, mask, table_pose
-        self.observation_space = spaces.Dict({
-            "color": spaces.Box(0, 255, shape=(720, 1280, 3), dtype=np.uint8),
-            "depth": spaces.Box(0, 10000, shape=(720, 1280), dtype=np.uint16),
-            "mask": spaces.Box(0, 1, shape=(720, 1280), dtype=np.uint8),
-            "table_pose": spaces.Box(-10, 10, shape=(4, 4), dtype=np.float32),
-            "bg_depth": spaces.Box(0, 10000, shape=(720, 1280), dtype=np.float32),
-            "camera_info": spaces.Box(0, 10000, shape=(3, 3), dtype=np.float32),
-        })
+        self.observation_space = spaces.Dict({})
+
+        # self.observation_space["obs_names"] = spaces.Sequence(spaces.Text(max_length=32))
+        # self.observation_space["obs"] = spaces.Sequence(spaces.Box(low=-1, high=1, shape=None, dtype=np.float32))
+
+        # self.observation_space["pose_names"] = spaces.Sequence(spaces.Text(max_length=32))
+        # self.observation_space["pose"] = spaces.Sequence(custom_spaces.pose_space())
+
+        # unpack_len_1_lists = True
+        self.observation_space["color_img"] = custom_spaces.color_img_space()
+        self.observation_space["depth_img"] = custom_spaces.depth_img_space()
+        self.observation_space["camera_info"] = custom_spaces.camera_info_space()
+        self.observation_space["segments"] = spaces.Sequence(custom_spaces.segment2darray_space())
+
+        self.action_space = custom_spaces.grasp_array_space()
+
+        if self.vec:
+            self.observation_space = spaces.Sequence(self.observation_space)
+
+
+
         # Example action space: list of grasp poses (x, y, z, rx, ry, rz, grasp_width)
-        self.action_space = spaces.Sequence(
-            spaces.Box(-1, 1, shape=(7,), dtype=np.float32)
-        )
+
         print("[READY] GraspNetEnv")
 
     def reset_scene_order(self):
@@ -156,6 +181,85 @@ class GraspNetEnv(gym.Env):
         # See how table points are made in graspnetAPI/graspnet_eval.py
 
         return T_camera_table
+
+    def load_graspnet_grasps(self, scene_id, ann_id, fric_coef_thresh=0.2, n=20, sort_by_score=False) -> graspnetAPI.GraspGroup:
+        """
+        Loads grasps for a given scene and annotation id.
+        Returns a list of Grasp objects.
+        """
+        # Load grasps from GraspNet
+        grasps: graspnetAPI.GraspGroup = self.graspnet.loadGrasp(sceneId = scene_id,
+                                         annId = ann_id,
+                                         format = '6d',
+                                         camera = self.camera,
+                                         fric_coef_thresh = fric_coef_thresh)
+        
+        print("Loaded grasps:", len(grasps))
+        # selected_grasps = _6d_grasp[:20]
+        # _6d_grasp.sort_by_score() # to get best grasps first
+        # _6d_grasp.sort_by_score(reverse=True) # to get worst grasps first
+        # selected_grasps = _6d_grasp.random_sample(numGrasp = 10)
+
+        # Verify invertable
+        test_grasp: graspnetAPI.Grasp = grasps[0]
+        xyz, rpy = matrix_to_xyzrpy(test_grasp.tcp_frame)
+        action = [xyz[0], xyz[1], xyz[2], rpy[0], rpy[1], rpy[2], test_grasp.width]
+        compare_grasp = self.make_graspnet_grasp(action)
+
+        assert np.allclose(test_grasp.T_graspnet_tcp @ test_grasp.T_tcp_graspnet, np.eye(4)), "T_graspnet_tcp @ T_tcp_graspnet mismatch"
+        assert np.allclose(test_grasp.rotation_matrix, compare_grasp.rotation_matrix), "rotation_matrix mismatch"
+        assert np.allclose(test_grasp.translation, compare_grasp.translation), "translation mismatch"
+        assert np.allclose(test_grasp.width, compare_grasp.width), "width mismatch"
+        # assert np.allclose(test_grasp.grasp_array, compare_grasp.grasp_array) # You cannot compare grasp_array directly as scores and object ids are not the same
+
+        if sort_by_score == True:
+            grasps.sort_by_score(reverse=True)
+            selected_grasps = grasps[:n]
+        else:
+            selected_grasps = grasps.random_sample(numGrasp=n)
+
+        print("Returning grasps:", len(selected_grasps))
+
+        return selected_grasps
+    
+    # Its bad design to have these sample them selves as I cannot get any consitency!
+    def display_graspnet_grasps(self, grasps: graspnetAPI.GraspGroup, scene_id, ann_id,  use_defaults = True, show_frame = True):
+        geometries = []
+        geometries.append(self.graspnet.loadScenePointCloud(sceneId = scene_id, annId = ann_id, camera = self.camera))
+        geometries += grasps.to_open3d_geometry_list(use_defaults=use_defaults, show_frame=show_frame)
+        o3d.visualization.draw_geometries(geometries)
+
+    def graspnet_grasps_to_actions(self, grasps: graspnetAPI.GraspGroup) -> List[np.ndarray]:
+        actions = []
+        for g in grasps:
+            xyz, rpy = matrix_to_xyzrpy(g.tcp_frame)
+            grasp_action = np.array([xyz[0], xyz[1], xyz[2], rpy[0], rpy[1], rpy[2], g.width])
+            actions.append(grasp_action)
+        return actions
+
+    def make_graspnet_grasp(self, action) -> graspnetAPI.Grasp:
+
+        x, y, z, rx, ry, rz, grasp_width = action
+
+        # Internally graspnet uses a strange coordinate system, see: bam_gym/docs/grasp_net_def.png
+
+        height = self.finger_width
+        depth = self.finger_height - 0.02 # minus 2cm to account for depth_base, it will be added back later internally in GraspNet
+
+        T_world_tcp = xyzrpy_to_matrix([x, y, z], [rx, ry, rz])  # Convert to transformation matrix
+        grasp_dummy = graspnetAPI.Grasp()
+        grasp_dummy.depth = depth
+        # T_world_graspnet = T_world_tcp @ graspnetAPI.Grasp().T_tcp_graspnet  #[BUG] you cannot use a blank grasp like this..
+        T_world_graspnet = T_world_tcp @ grasp_dummy.T_tcp_graspnet  
+        R_world_graspnet = T_world_graspnet[:3, :3] 
+        t_world_graspnet = T_world_graspnet[:3, 3]
+
+        score = 0
+        object_id = -1
+
+        # [score, width, height, depth, rotation_matrix(9), translation(3), object_id]
+        grasp_params = [score, grasp_width, height, depth, R_world_graspnet, t_world_graspnet, object_id]
+        return graspnetAPI.Grasp(*grasp_params)
 
     def load_feedback(self, scene_id, ann_id) -> GymFeedback:
         """
@@ -230,8 +334,6 @@ class GraspNetEnv(gym.Env):
         # f.depth_img = [depth]
         # f.camera_info = [camera_info]
 
-
-
         return f
 
     def reset(self, seed=None, options=None):
@@ -252,9 +354,11 @@ class GraspNetEnv(gym.Env):
         response.feedback = [self.load_feedback(scene_id, ann_id)]
         (self.obs, info) = response.to_reset_tuple(vec=self.vec)
 
+        info["scene_id"] = scene_id
+        info["ann_id"] = ann_id
         return self.obs, info
 
-    def step(self, action):
+    def step(self, action: List[np.ndarray], vis=False) -> tuple:
         #TODO right now we just support actions for a single scene annotation... at some point you could test vec env as well
         # You can try multiple actions though and you will get feedback for each one no?
         TIMER.start("step")
@@ -262,27 +366,20 @@ class GraspNetEnv(gym.Env):
         #region - Unpack action and create grasp group
         TIMER.start("creating grasp group")
 
-        if isinstance(action, np.ndarray):
-            actions = [action]
+        # Support passing in a single action
+        if not isinstance(action, (list, graspnetAPI.GraspGroup)):
+            action = [action]
+
+
+        # Support directly passing in GraspGroup for debugging
+        if isinstance(action, graspnetAPI.GraspGroup):
+            grasp_group = action
+
         else:
-            actions = list(action)
-    
-        grasp_group = GraspGroup()
-
-        for a in actions:
-            x, y, z, rx, ry, rz, grasp_width = a
-
-            #TODO add finger thickness option
-            score = 0.0  # Placeholder score
-            width = grasp_width  # Grasp width from action
-            height = self.finger_height
-            depth = self.finger_depth
-            rotation_matrix = euler2mat(rx, ry, rz, axes='sxyz')  # rotation matrix
-            translation = np.array([x, y, z])
-            object_id = -1
-            # [score, width, height, depth, rotation_matrix(9), translation(3), object_id]
-            grasp_params = [score, width, height, depth, rotation_matrix, translation, object_id]
-            grasp_group.add(Grasp(*grasp_params))
+            grasp_group = graspnetAPI.GraspGroup()
+            for a in action:
+                grasp = self.make_graspnet_grasp(a)
+                grasp_group.add(grasp)
 
         TIMER.stop("creating grasp group")
         #endregion - Unpack action and create grasp group
@@ -293,19 +390,50 @@ class GraspNetEnv(gym.Env):
         curr_ann_id = self.ann_order[self.ann_ptr]
 
         # TODO edit this to allow for more deterministic evaluation, I should get a result for each grasp I pass in!
-        eval_data = self.graspnet._eval_scene(
-            scene_id = curr_scene_id,
-            ann_id_list = [curr_ann_id], 
-            grasp_group_list = [grasp_group],
-            TOP_K = len(grasp_group),
-            return_list = True,
-            vis = self.vis,
-            max_width = self.max_width,
-            use_cache = True,
-            )
-        scene_accuracy_list, grasp_list_list, score_list_list, collision_list_list = eval_data
+        # TODO I could potetially cache all the models once at the start
+        # eval_scene_all_grasps
+        # eval_data = self.graspnet._eval_scene(
+        #     scene_id = curr_scene_id,
+        #     ann_id_list = [curr_ann_id], 
+        #     grasp_group_list = [grasp_group],
+        #     TOP_K = len(grasp_group),
+        #     return_list = True,
+        #     vis = self.vis,
+        #     max_width = self.max_width,
+        #     use_cache = True,
+        #     )
+        eval_data = self.graspnet.eval_scene_all_grasps(curr_scene_id, [curr_ann_id], [grasp_group], vis=vis, use_cache = True)
+        grasp_list_list, score_list_list, collision_list_list = eval_data
+        scores = score_list_list[0]
+        scores_raw = np.copy(scores) 
+        collision = collision_list_list[0]
 
-        reward = [1.0] # one reward per action
+        print("scores: ", scores_raw)
+
+        # Scores are friction coefficients between [1.2, 0.2], Lower is better, -1 means no force closure/collision
+
+        if self.friction_threshold > 0:
+            scores[scores > self.friction_threshold] = 0 # no force closure
+            scores[scores <= self.friction_threshold] = 1 
+
+        else:
+            # Normalize to between [0, 1] for confidence values
+            # Optionally threshold to return binary grasp success
+            max_score = 1.2
+            min_score = 0.2
+            scores = -1 * (scores - max_score) / (max_score - min_score)
+
+        scores[scores_raw == -1] = 0 # failed
+
+        print("reward: ", scores)
+
+        self.grasp_group = grasp_group
+        self.collision_mask = collision
+        self.reward = scores
+        self.scores_raw = scores_raw
+        self.render() # render the current scene, grasps and rewards, before incrementing the scene pointer
+
+        reward = scores # one reward per action
         TIMER.stop("_eval_scene")
         #endregion - Evaluate action and determine reward
 
@@ -341,6 +469,8 @@ class GraspNetEnv(gym.Env):
         response.feedback = [f]
         (self.obs, reward, terminated, truncated, info) = response.to_step_tuple(vec=self.vec)
 
+        info["scene_id"] = next_scene_id
+        info["ann_id"] = next_ann_id
         # TODO add this to info dict
         # info = {
         #     "reward_scene_idx": curr_scene_id,
@@ -354,9 +484,54 @@ class GraspNetEnv(gym.Env):
         return self.obs, reward, terminated, truncated, info
     
     def render(self):
-        # TODO: visualize scene, grasps, table, etc. with open3d
-        pass
+
+        if self.render_mode != "human":
+            return
+        
+        curr_scene_id = self.scene_order[self.scene_ptr]
+        curr_ann_id = self.ann_order[self.ann_ptr]
+
+        # SLOW VERSION CAN OPTIMISE LATER
+
+        color_list = []
+        for i in range(len(self.grasp_group)):
+            if self.collision_mask[i]: # In collision
+                color_list.append((1, 0, 0)) 
+            elif self.scores_raw[i] == -1: # No force closure
+                color_list.append((0, 0, 0)) 
+            else:
+                val = self.reward[i]
+                r = 1 - val
+                g = 1
+                b = 1 - val
+                color_list.append((r,g,b)) # GREEN to WHITE
+
+        # Yuck! its not easy to add to thr grasp group as it internally manager the grasps as arrays... not classes
+        use_defaults = False
+        if len(self.grasp_group) > 5:
+            use_defaults = True
+
+        # a bit misleading, use_defaults ensures that thin grasps are used. use_collision turns on hardcoded collision values
+        # likely if the gripper height and depth are set more reaslitically then if use_collision is false you may still get a thick gripper
+        grasps_geometry = self.grasp_group.to_open3d_geometry_list(color_list, use_defaults=use_defaults, use_collision=False, show_frame=True)
+        
+        t = o3d.geometry.PointCloud()
+        t.points = o3d.utility.Vector3dVector(self.graspnet._scene_cache['table_trans'])
+        model_list = graspnetAPI.utils.utils.generate_scene_model(self.root, 'scene_%04d' % curr_scene_id , curr_ann_id, return_poses=False, align=False, camera=self.camera)
+        pcd = self.graspnet.loadScenePointCloud(curr_scene_id, self.camera, curr_ann_id)
+        origin_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.03)
+    
+        scene_list = [
+            [pcd, *grasps_geometry, origin_frame],
+            [pcd, *grasps_geometry, *model_list, origin_frame],
+            [*grasps_geometry, *model_list, t, origin_frame]
+        ]
+
+        self.viewer.update_scenes(scene_list, reset_view=True)
+        self.viewer.run(duration=0, blocking=True)
+
 
     def close(self):
-        pass
+        if self.viewer:
+            self.viewer.close()
 

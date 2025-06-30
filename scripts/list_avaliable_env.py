@@ -1,5 +1,5 @@
+import bam_gym # you need to import bam_gym so that .register is called
 import gymnasium as gym
-import bam_gym
 import numpy as np
 
 print("\n=== Registered Gymnasium Environments ===")

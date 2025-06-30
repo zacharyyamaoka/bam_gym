@@ -2,6 +2,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 
+# Only include values in the spaces that people actually use/need to know about...
 
 def obs_space(value_range=(-np.inf, np.inf), max_obs_dim=1):
     """
@@ -13,8 +14,9 @@ def obs_space(value_range=(-np.inf, np.inf), max_obs_dim=1):
 
     return space
 
+
 def pose_space(position_bounds=(-10.0, 10.0), orientation_bounds=(-np.pi, np.pi)):
-    """Returns a gym space for a Pose with position and orientation (Euler)."""
+    """Returns a gym space for a Pose with position and orientation (Euler). if you convert into a ros_py_type, it will be a quaternion."""
     pos_low, pos_high = position_bounds
     ori_low, ori_high = orientation_bounds
 
@@ -177,3 +179,31 @@ def segment2darray_space():
         "header": spaces.Dict({}),
         "segments": spaces.Sequence(segment2d_space()),
     })
+
+def grasp_array_space(
+    xyz_bounds=(-10.0, 10.0),
+    rpy_bounds=(-np.pi, np.pi),
+    grasp_width_bounds=(0.0, 0.1)
+):
+    """
+    Returns a gym Box space for a grasp represented as a 7D array: (x, y, z, rx, ry, rz, w)
+    """
+    low = np.array([
+        xyz_bounds[0],  # x
+        xyz_bounds[0],  # y
+        xyz_bounds[0],  # z
+        rpy_bounds[0],  # rx
+        rpy_bounds[0],  # ry
+        rpy_bounds[0],  # rz
+        grasp_width_bounds[0],  # w
+    ], dtype=np.float32)
+    high = np.array([
+        xyz_bounds[1],  # x
+        xyz_bounds[1],  # y
+        xyz_bounds[1],  # z
+        rpy_bounds[1],  # rx
+        rpy_bounds[1],  # ry
+        rpy_bounds[1],  # rz
+        grasp_width_bounds[1],  # w
+    ], dtype=np.float32)
+    return spaces.Box(low=low, high=high, shape=(7,), dtype=np.float32)
