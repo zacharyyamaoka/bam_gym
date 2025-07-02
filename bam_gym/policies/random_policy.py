@@ -38,5 +38,5 @@ class RandomPolicy(GenericPolicy):
             return False
     
     def step(self, observation, reward=None, terminated=None, truncated=None, info=None) -> Tuple[Any, Dict[str, Any]]:
-
+        assert self.action_space is not None, "env_init() must be called before calling step"
         return self.action_space.sample(), {}
