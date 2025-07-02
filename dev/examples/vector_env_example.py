@@ -10,7 +10,7 @@ vector environment functionality.
 
 import numpy as np
 from bam_gym.envs import make_bam_vec_env
-from bam_gym.envs.clients.mock_env import MockEnv
+from bam_gym.wrappers.mock_env import MockEnv
 from bam_gym.transport import MockTransport
 
 

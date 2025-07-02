@@ -10,7 +10,7 @@ import gymnasium as gym
 from bam_gym.envs import CartPole, GraspXYR
 from ros_py_types.bam_msgs import ErrorCode, ErrorType
 from bam_gym.transport import RoslibpyTransport
-from bam_gym.utils import print_step_result
+from bam_gym.utils import print_step
 
 
 # First make transport, this allows it communicate with backend server
@@ -27,7 +27,7 @@ for _ in range(100):
     action = env.action_space.sample(mask=(1,None)) # Mask sequence to len(1)
     new_observation, reward, terminated, truncated, info = env.step(action)
 
-    print_step_result(_, observation, action, reward, terminated, truncated, info)
+    print_step(_, observation, action, reward, terminated, truncated, info)
     observation = new_observation
 
     # Handle error - Simulated environments always return observations, but sometimes

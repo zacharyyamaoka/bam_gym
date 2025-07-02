@@ -35,26 +35,29 @@ def pose_space(position_bounds=(-10.0, 10.0), orientation_bounds=(-np.pi, np.pi)
 
     return space
 
+def header_space():
+    stamp_space = spaces.Dict({
+        "sec": spaces.Box(low=0, high=2**31 - 1, shape=(), dtype=np.int32),
+        "nanosec": spaces.Box(low=0, high=1_000_000_000 - 1, shape=(), dtype=np.int32),
+    })
+
+    space = spaces.Dict({
+        "stamp": stamp_space,
+        "frame_id": spaces.Text(max_length=32),
+    })
+
+    return space
+    
 def pose_stamped_space(
     position_bounds=(-10.0, 10.0),
     orientation_bounds=(-np.pi, np.pi),
 ):
     """Returns a gym space for geometry_msgs/msg/PoseStamped."""
 
-    stamp_space = spaces.Dict({
-        "sec": spaces.Box(low=0, high=2**31 - 1, shape=(), dtype=np.int32),
-        "nanosec": spaces.Box(low=0, high=1_000_000_000 - 1, shape=(), dtype=np.int32),
-    })
-
-    header_space = spaces.Dict({
-        # "stamp": stamp_space,
-        "frame_id": spaces.Text(max_length=32),
-    })
-
     pose = pose_space(position_bounds, orientation_bounds)
 
     space = spaces.Dict({
-        "header": header_space,
+        "header": header_space(),
         "pose": pose,
     })
 
@@ -164,7 +167,7 @@ def mask_space(max_size=(600, 480)):
 
 def segment2d_space():
     return spaces.Dict({
-        "header": spaces.Dict({}),  # You can further specify fields if needed
+        "header": header_space(),
         "results": spaces.Sequence(spaces.Dict({})),  # ObjectHypothesisWithPose
         "bbox": spaces.Dict({}),
         "id": spaces.Text(max_length=64),
@@ -207,3 +210,35 @@ def grasp_array_space(
         grasp_width_bounds[1],  # w
     ], dtype=np.float32)
     return spaces.Box(low=low, high=high, shape=(7,), dtype=np.float32)
+
+
+
+class MaskedSpaceWrapper(spaces.Space):
+    """
+    Convience class so you don't need to call space.sample(mask=(1,None)), it automatically applies the mask if provided.
+    
+    """
+    def __init__(self, space: spaces.Space, mask=None):
+        super().__init__(space.shape if hasattr(space, "shape") else None, space.dtype if hasattr(space, "dtype") else None)
+        self.space = space
+        self.mask = mask
+
+    def sample(self):
+        # Custom sample logic using mask
+        if hasattr(self.space, "sample"):
+            try:
+                return self.space.sample(mask=self.mask)
+            except TypeError:
+                # fallback for spaces that don’t support masks natively
+                return self.space.sample()
+        raise NotImplementedError("Wrapped space does not support sampling")
+
+    def contains(self, x):
+        return self.space.contains(x)
+
+    def __getattr__(self, name):
+        # Delegate all other attributes
+        return getattr(self.space, name)
+    
+    def __repr__(self):
+        return f"<MaskedSpace<{str(self.space)}>>"

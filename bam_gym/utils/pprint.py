@@ -4,37 +4,62 @@ from ros_py_types.bam_msgs import ErrorType
 from gymnasium import spaces
 import json
 
-def describe_ndarray(value):
+def describe_value(value):
     if isinstance(value, np.ndarray):
-        return f"np.ndarray{value.shape}"
+        if value.shape:
+            return f"np.ndarray{value.shape}"
+        else:
+            return f"{value.item():.1f}"  # scalar ndarray
     return value
 
 def recursive_format(obj):
     if isinstance(obj, dict):
         return {k: recursive_format(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
+    elif isinstance(obj, (list, tuple)):
         return [recursive_format(item) for item in obj]
     else:
-        return describe_ndarray(obj)
+        return describe_value(obj)
 
-def print_step_result(i, observation, action, reward, terminated, truncated, info):
-    display_obs = recursive_format(copy.deepcopy(observation))
-    display_info = recursive_format(copy.deepcopy(info))
+def format_observation(observation):
+    formatted_obs = recursive_format(copy.deepcopy(observation))
+    return formatted_obs
 
-    # Special formatting for error_code if it exists
+def format_info(info):
+    formatted_info = recursive_format(copy.deepcopy(info))
     try:
         code_value = info["header"]["error_code"]["value"]
-        display_info["header"]["error_code"]["value"] = ErrorType(code_value).name
+        formatted_info["header"]["error_code"]["value"] = ErrorType(code_value).name # type: ignore
     except Exception:
-        pass  # Gracefully skip if structure doesn't match
+        pass  # 
+
+    return formatted_info
+
+def print_observation(observation):
+    display_obs = format_observation(observation)
+    print(f"\nObservation:")
+    print(f"    {display_obs}")
+
+def print_reset(observation, info):
+
+    display_obs = format_observation(observation)
+    display_info = format_info(info)
+
+    print(f"\nReset Result:")
+    print(f"    Observation : {display_obs}")
+    print(f"    Info        : {display_info}")
+
+
+def print_step(action, observation, reward, terminated, truncated, info, i=0):
+    display_obs = format_observation(observation)
+    display_info = format_info(info)
 
     print(f"\n[{i}] Step Result:")
-    print(f"Action: {action}")
-    print(f"Observation: {display_obs}")
-    print(f"Reward: {reward}")
-    print(f"Terminated: {terminated}")
-    print(f"Truncated: {truncated}")
-    print(f"Info: {display_info}")
+    print(f"    Action      : {action}")
+    print(f"    Observation : {display_obs}")
+    print(f"    Reward      : {reward}")
+    print(f"    Terminated  : {terminated}")
+    print(f"    Truncated   : {truncated}")
+    print(f"    Info        : {display_info}")
 
 
 def to_jsonable(obj):
@@ -47,14 +72,21 @@ def to_jsonable(obj):
         return [to_jsonable(v) for v in obj]
     elif isinstance(obj, np.ndarray):
         return obj.tolist()
-    elif isinstance(obj, (np.float32, np.float64)):
-        return float(obj)
-    elif isinstance(obj, (np.int32, np.int64)):
+    elif isinstance(obj, np.integer):
         return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif hasattr(obj, '__dict__'):
+        # Handle custom objects like Grasp objects
+        try:
+            return {k: to_jsonable(v) for k, v in obj.__dict__.items()}
+        except Exception:
+            # Fallback: convert to string representation
+            return str(obj)
     else:
         return obj
     
-def print_sampled_action(action):
+def print_action(action):
 
     json_obj = to_jsonable(action)
     print(json.dumps(json_obj, indent=2))

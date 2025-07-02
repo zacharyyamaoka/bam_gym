@@ -1,6 +1,7 @@
 from gymnasium.envs.registration import register
 
 from bam_gym.env_factory import make_env
+from bam_gym.policy_factory import make_policy
 
 """
 I was getting frusterated as it was taking a while to run the code. I checked the import and it seems I have some large imports
@@ -55,6 +56,11 @@ register(
 register(
     id="bam/GraspXYR",
     entry_point="bam_gym.envs.clients.grasp_xyr:GraspXYR",
+)
+
+register(
+    id="bam/GenericGymClient",
+    entry_point="bam_gym.envs.clients.generic_gym_client:GenericGymClient",
 )
 
 register(

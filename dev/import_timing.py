@@ -19,7 +19,7 @@ from bam_gym.envs.local_server.context_bandit import ContextBandit
 print(f"ContextBandit Import took {time.time() - start:.2f} seconds")
 
 start = time.time()
-from bam_gym.envs.clients.mock_env import MockEnv
+from bam_gym.wrappers.mock_env import MockEnv
 print(f"MockEnv Import took {time.time() - start:.2f} seconds")
 
 start = time.time()

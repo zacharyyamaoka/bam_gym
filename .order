@@ -1,4 +1,5 @@
 bam_gym
+bam_gym/policies
 bam_gym/envs
 bam_gym/transport
 bam_gym/ros_types

@@ -9,13 +9,18 @@ import json
 
 # https://roslibpy.readthedocs.io/en/latest/examples.html
 
+from ros_py_types.bam_msgs import ErrorCode, ErrorType, GymFeedback
+from bam_gym.transport.generic_transport import GenericTransport
 
-class RoslibpyTransport():
-    def __init__(self, namespace="", node_name="gym_env", host_ip='localhost', port=9090, timeout_sec=5):
+
+class RoslibpyTransport(GenericTransport):
+    def __init__(self, namespace="", node_name="gym_env", host_ip='localhost', port=9090, timeout_sec=5, **kwargs):
         """ 
         namespace: Each robot rack has a unique namespace (bam_GPU, bam_001, etc.)
         node_name: by default is set to 'gym_env'
         """
+        super().__init__(**kwargs)
+
         namespace = namespace.strip('/')
         if namespace:
             namespace = '/' + namespace  # Add leading slash if not empty
