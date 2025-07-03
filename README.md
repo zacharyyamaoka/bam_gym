@@ -361,7 +361,7 @@ Updated: June 4 2025
     - installation is with -e (editable), so you can adjust as needed!
 
 ```{shell}
-python3 -m pip install -e /home/bam/python_ws/bam_gym
+python3 -m pip install -e $HOME/python_ws/bam_gym
 
 ```
 
