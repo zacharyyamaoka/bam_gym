@@ -13,8 +13,8 @@ class RandomPolicy(GenericPolicy):
     
     This is useful for baseline testing and exploration.
     """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, ):
+        super().__init__()
         
         self.last_observation: Any = None
         self.step_count: int = 0

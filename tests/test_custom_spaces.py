@@ -62,24 +62,33 @@ def test_obs_space():
     space = custom_spaces.obs_space()
 
 def assert_pose_equal(msg: Pose, msg_dict: dict):
-    # 1. space is euluer, Pose is a quaternion, so you cannot compare!
-    # assert msg.orientation.x  == msg_dict["orientation"]["x"]
+    """ Design Notes:
 
-    # 2. euluer could be non-unique, so we can't compare!
-    # array = msg.to_array()
-    # assert array[3] == msg_dict["orientation"]["x"]
-    # assert array[4] == msg_dict["orientation"]["y"]
-    # assert array[5] == msg_dict["orientation"]["z"]
+    1. space is euluer, Pose is a quaternion, so you cannot compare!
+    assert msg.orientation.x  == msg_dict["orientation"]["x"]
 
-    # 3. convert to quaternion and compare
+    2. euluer could be non-unique, so we can't compare!
+    array = msg.to_array()
+    assert array[3] == msg_dict["orientation"]["x"]
+    assert array[4] == msg_dict["orientation"]["y"]
+    assert array[5] == msg_dict["orientation"]["z"]
+
+    3. convert to quaternion and compare
+
+    [UPDATE] Now all dict representations should just be quaternion, and all array representations should be euler angles.
+    """
     assert msg.position.x == msg_dict["position"]["x"]
     assert msg.position.y == msg_dict["position"]["y"]
     assert msg.position.z == msg_dict["position"]["z"]
-    w, x, y, z = euler2quat(msg_dict["orientation"]["x"], msg_dict["orientation"]["y"], msg_dict["orientation"]["z"])
-    assert np.isclose(x, msg.orientation.x)
-    assert np.isclose(y, msg.orientation.y)
-    assert np.isclose(z, msg.orientation.z)
-    assert np.isclose(w, msg.orientation.w)
+    # w, x, y, z = euler2quat(msg_dict["orientation"]["x"], msg_dict["orientation"]["y"], msg_dict["orientation"]["z"])
+    # assert np.isclose(x, msg.orientation.x)
+    # assert np.isclose(y, msg.orientation.y)
+    # assert np.isclose(z, msg.orientation.z)
+    # assert np.isclose(w, msg.orientation.w)
+    assert msg.orientation.x == msg_dict["orientation"]["x"]
+    assert msg.orientation.y == msg_dict["orientation"]["y"]
+    assert msg.orientation.z == msg_dict["orientation"]["z"]
+    assert msg.orientation.w == msg_dict["orientation"]["w"]
 
 def assert_header_equal(msg: Header, msg_dict: dict):
     assert msg.stamp.sec == msg_dict["stamp"]["sec"]

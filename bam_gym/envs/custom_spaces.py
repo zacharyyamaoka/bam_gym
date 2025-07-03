@@ -27,9 +27,11 @@ def pose_space(position_bounds=(-10.0, 10.0), orientation_bounds=(-np.pi, np.pi)
             "z": spaces.Box(low=pos_low, high=pos_high, shape=(), dtype=np.float32),
         }),
         "orientation": spaces.Dict({
-            "x": spaces.Box(low=ori_low, high=ori_high, shape=(), dtype=np.float32),  # roll
-            "y": spaces.Box(low=ori_low, high=ori_high, shape=(), dtype=np.float32),  # pitch
-            "z": spaces.Box(low=ori_low, high=ori_high, shape=(), dtype=np.float32),  # yaw
+            "x": spaces.Box(low=ori_low, high=ori_high, shape=(), dtype=np.float32),  
+            "y": spaces.Box(low=ori_low, high=ori_high, shape=(), dtype=np.float32),  
+            "z": spaces.Box(low=ori_low, high=ori_high, shape=(), dtype=np.float32), 
+            "w": spaces.Box(low=ori_low, high=ori_high, shape=(), dtype=np.float32), 
+
         }),
     })
 
@@ -69,7 +71,7 @@ def grasp_space(position_bounds=(-10.0, 10.0), orientation_bounds=(-np.pi, np.pi
     """
     space = spaces.Dict({
         "pose": pose_stamped_space(position_bounds, orientation_bounds),
-        "grasp_width": spaces.Box(
+        "gripper_width": spaces.Box(
             low=grasp_width_bounds[0],
             high=grasp_width_bounds[1],
             shape=(),

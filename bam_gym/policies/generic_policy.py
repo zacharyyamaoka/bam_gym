@@ -17,7 +17,7 @@ class GenericPolicy():
     Policies are callable objects that take observations and return actions.
     """
     
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.last_observation: Any = None
         self.step_count: int = 0
         self.ready: bool = True  # Policy is ready by default

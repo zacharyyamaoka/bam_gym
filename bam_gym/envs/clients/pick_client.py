@@ -1,6 +1,3 @@
-
-
-
 # BAM
 from bam_gym.envs.clients.generic_gym_client import GenericGymClient
 from bam_gym.transport import RoslibpyTransport, MockTransport
@@ -20,56 +17,41 @@ from gymnasium import spaces
 import pygame
 import numpy as np
 
-from typing import Tuple, List, Dict
+from typing import Any, SupportsFloat, Tuple, List, Dict
 """
 
-Send a list of pose stamped for different objects to pick up
 
+Vs Pick and Lift, this is faster, as soon as the pick attempts finishes, the object spawns in a new static location
 """
 
-class PickAndLift(GenericGymClient):
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 30}
+class PickClient(GenericGymClient):
 
-    def __init__(self, transport, render_mode=None, plugin = 'gazebo', **kwargs):
-            
-        super().__init__(transport,
-                         obs = False,
-                         color = False,
-                         depth = False,
-                         detections = False,
-                         pose = True,
-                         render_mode = render_mode
-                         )
-
-        self.env_name = "PickAndLift"
-        self.pick_params = get_default_params()
-
-        self.action_space = spaces.Sequence(custom_spaces.grasp_space())
-            
+    def __init__(self, transport = MockTransport(), n_pose=1, **kwargs):
         
-    def reset(self, seed=None) -> Tuple[List, Dict]:
+        super().__init__(transport=transport, n_pose=n_pose,  **kwargs)
 
-        # Get GymAPI_Response from reset()
-        response: GymAPI_Response = self._reset(seed)
+        self.env_name = "Pick"
+        self.pick_params = get_default_params()
+        self.action_space = custom_spaces.grasp_space()
 
-        # Convert to (observation, info)
-        (observations, infos) = response.to_reset_tuple()
+        if self.vec:
+            self.single_action_space = self.action_space
+            self.action_space = spaces.Sequence(self.single_action_space)
 
-        self._render() # checks internally for render modes
-
-        return (observations, infos)
+    def _init_action_space(self):
+        self.single_action_space = custom_spaces.grasp_space()
+        self.action_space = spaces.Sequence(self.single_action_space)
     
-    def step(self, action: spaces.Sequence) -> Tuple[List, List, List, List, Dict]:
+    def step(self, action) -> tuple[dict, SupportsFloat, bool, bool, dict[str, Any]]:
 
         # Convert from action to GymAPI_Request
         request = GymAPI_Request()
 
-        request.header.request_type = RequestType.STEP
-        request.env_name = self.env_name
-
         action_msg_list =[]
 
         # convert gym action type to dummy ros action type
+        if not isinstance(action, (list, tuple)):
+            action = [action]
 
         for a in action:
             action_msg = GymAction()
@@ -97,21 +79,20 @@ class PickAndLift(GenericGymClient):
 
         self._render()
 
-        return (observations, rewards, terminated, truncated, infos)
+        return (observations, rewards, terminated, truncated, infos) # type: ignore
     
     def render(self):
-        return self._render(self)
+        return self._render()
 
     def close(self) -> GymAPI_Response:
         return self._close()
 
 
 if __name__ == '__main__':
-    from bam_gym.transport import MockTransport
-    from bam_gym.utils.pprint import print_sampled_action, print_gym_space
-    env = PickAndLift(MockTransport())
+    from bam_gym import print_gym_space, print_action
+    env = PickClient()
 
-    print(type(env.action_space.sample(mask=(1,None))[0]))
+    print(type(env.action_space.sample()))
     
     print("\nACTION SPACE: \n")
     print_gym_space(env.action_space)
@@ -119,9 +100,9 @@ if __name__ == '__main__':
     print("\nOBSERVATION SPACE: \n", )
     print_gym_space(env.observation_space)
 
-    action = env.action_space.sample(mask=(2,None))
+    action = env.action_space.sample()
     print("\nSAMPLED ACTION: \n", )
-    print_sampled_action(action)
+    print_action(action)
 
     # (observations, infos) = env.reset()
     # assert env.success

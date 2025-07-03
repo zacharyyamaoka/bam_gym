@@ -210,7 +210,7 @@ class GenericGymClient(gym.Env):
 
         self._render() # checks internally for render modes
 
-        return (observations, infos)
+        return (observations, infos) # type: ignore
     
     def _reset(self, seed=None, options=None, request: GymAPI_Request | None = None)-> GymAPI_Response:
         """ Helper function that should be called by reset()"""
@@ -226,7 +226,7 @@ class GenericGymClient(gym.Env):
         request.env_name = self.env_name
         self.request = request
 
-        self.response: GymAPI_Response = self.transport.step(request)
+        self.response: GymAPI_Response = self.transport.step(request) # type: ignore
         return self.response
     
     def step(self, action) -> StepReturn | VecStepReturn: 
@@ -234,7 +234,6 @@ class GenericGymClient(gym.Env):
         To be implemented in parent class.
         - Take a action of type (spaces) and fill a GymAPI_Request msg
         """
-
         self.request = GymAPI_Request()
 
         self.response: GymAPI_Response = self._step(self.request)
@@ -243,12 +242,13 @@ class GenericGymClient(gym.Env):
 
         self._render()
 
-        return (observations, rewards, terminated, truncated, infos)
+        return (observations, rewards, terminated, truncated, infos) # type: ignore
     
     def _step(self, request: GymAPI_Request) -> GymAPI_Response:
         """ Helper function that should be called by step()"""
         request.header.request_type = RequestType.STEP
         request.env_name = self.env_name
+        self.request = request
         response: GymAPI_Response = self.transport.step(request)
         self.response = response
         self.step_count += 1

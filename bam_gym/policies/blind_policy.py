@@ -31,11 +31,12 @@ class BlindPolicy(GenericPolicy):
     
     This is useful for baseline testing and exploration.
     """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         
         self.last_observation: Any = None
         self.step_count: int = 0
+        # print("Creating BlindPolicy, this reads the pose from the observation space and returns it as a grasp action Grasp.from_dict(pose, grasp_width=0.05)")
 
     def _validate_environment(self, env: gym.Env) -> None:
         # Should work with vectorized and non vectorized envs
@@ -81,7 +82,7 @@ class BlindPolicy(GenericPolicy):
                 pose_stamped_dict = pose_list[0]
                 grasp_dict = dict()
                 grasp_dict['pose'] = pose_stamped_dict
-                grasp_dict["grasp_width"] = 0.05
+                grasp_dict["gripper_width"] = 0.05
                 actions.append(grasp_dict)
             return actions, {}
         else:
@@ -90,7 +91,7 @@ class BlindPolicy(GenericPolicy):
             pose_stamped_dict = pose_stamped_list[0]
             grasp_dict = dict()
             grasp_dict['pose'] = pose_stamped_dict
-            grasp_dict["grasp_width"] = 0.05
+            grasp_dict["gripper_width"] = 0.05
             # grasp = Grasp.from_dict(grasp_dict)
             #  I also need to send a grasp width...
             return grasp_dict, {}  #no need to convert, env should accept an action in the same format

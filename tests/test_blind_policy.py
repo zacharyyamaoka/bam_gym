@@ -9,6 +9,7 @@ import bam_gym
 from bam_gym.wrappers import MockEnv, MockObs
 from bam_gym.transport import MockTransport
 from bam_gym.utils.pprint import print_action
+from bam_gym.runners import run_agent
 from ros_py_types.non_ros_msgs import Grasp
 from ros_py_types.geometry_msgs import PoseStamped, Pose
 from ros_py_types.std_msgs import Header
@@ -72,23 +73,32 @@ def test_blind_policy_four_pose():
     policy = bam_gym.make_policy('BlindPolicy')
     policy._validate_environment(env)
 
-def test_blind_policy_pick_env():
-    env = MockObs(gym.make('bam/GenericGymClient', disable_env_checker=True, n_pose=1))
+@pytest.mark.parametrize("env_name", ["bam/GenericGymClient", "bam/PickClient"])
+def test_blind_policy_pick_env(env_name):
+    env = MockObs(gym.make(env_name, disable_env_checker=True, n_pose=1))
     policy = bam_gym.make_policy('BlindPolicy')
     policy._validate_environment(env)
 
     obs, info = env.reset()
     reward, terminated, truncated = None, None, None
 
+    # ok so right now its just using a default grasp width, beacuse there is no grasp obs space. I think its ok tbh...
     for i in range(10):
         obs_pose_stamped = PoseStamped.from_dict(obs['pose'][0]) # take obs before step()
         action, action_info = policy(obs, reward, terminated, truncated, info)
-        grasp = Grasp.from_dict(action)
+        grasp = Grasp.from_dict(action) # works with PoseStamped and Grasp Dicts!
         grasp_pose_stamped = grasp.pose
-        assert_pose_stamped_equal(grasp_pose_stamped, obs_pose_stamped)
+        assert_pose_stamped_equal(grasp_pose_stamped, obs_pose_stamped) #NOTE this verifies that the header frame_id is the same!
 
         obs, reward, terminated, truncated, info = env.step(action)
         # print(f"\n {i}")
         # print(grasp_pose_stamped)
         # print(obs_pose_stamped)
+
+@pytest.mark.parametrize("env_name", ["bam/GenericGymClient", "bam/PickClient"])
+
+def test_blind_policy_run_agent(env_name):
+    env = MockObs(gym.make(env_name, disable_env_checker=True, n_pose=1))
+    policy = bam_gym.make_policy('BlindPolicy')
+    run_agent(policy, env, n_steps=10)
 

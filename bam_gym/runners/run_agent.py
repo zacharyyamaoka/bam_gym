@@ -25,7 +25,8 @@ import gymnasium as gym
 
 def run_agent(policy: GenericPolicy,
               env: gym.Env,
-              n_steps=10):
+              n_steps=10,
+              verbose_lvl=0):
     
     policy.env_init(env)
     obs, info = env.reset()
@@ -35,7 +36,8 @@ def run_agent(policy: GenericPolicy,
 
         action, action_info = policy(obs, reward, terminated, truncated, info)
         obs, reward, terminated, truncated, info = env.step(action)
-        print_step(action, obs, reward, terminated, truncated, info, iter)
+        if verbose_lvl > 0:
+            print_step(action, obs, reward, terminated, truncated, info, iter)
         if terminated or truncated:
             obs, info = env.reset()
 

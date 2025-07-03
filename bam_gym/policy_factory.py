@@ -5,7 +5,7 @@ Follow gym registration pattern to allow lazy loading of policies
 """
 from bam_gym.policies.generic_policy import GenericPolicy
 
-def make_policy(name, *args, **kwargs) -> GenericPolicy:
+def make_policy(name: str) -> GenericPolicy:
     """
     Factory function to create an agent instance by name.
     Args:
@@ -18,10 +18,10 @@ def make_policy(name, *args, **kwargs) -> GenericPolicy:
     """
     if name == "RandomPolicy":
         from bam_gym.policies.random_policy import RandomPolicy
-        return RandomPolicy(*args, **kwargs)
+        return RandomPolicy()
     elif name == "BlindPolicy":
         from bam_gym.policies.blind_policy import BlindPolicy
-        return BlindPolicy(*args, **kwargs)
+        return BlindPolicy()
     # elif name == "MockAgent":
     #     return MockAgent(*args, **kwargs)
     # elif name == "PickAndLiftAgent":

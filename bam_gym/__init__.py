@@ -1,7 +1,13 @@
 from gymnasium.envs.registration import register
 
+# import main base classes as they are used often!
+from bam_gym.policies.generic_policy import GenericPolicy
+from bam_gym.envs.clients.generic_gym_client import GenericGymClient
+
 from bam_gym.env_factory import make_env
 from bam_gym.policy_factory import make_policy
+
+from bam_gym.utils.pprint import print_action, print_observation, print_reset, print_step, print_gym_space
 
 """
 I was getting frusterated as it was taking a while to run the code. I checked the import and it seems I have some large imports
@@ -54,16 +60,12 @@ register(
 )
 
 register(
-    id="bam/GraspXYR",
-    entry_point="bam_gym.envs.clients.grasp_xyr:GraspXYR",
-)
-
-register(
     id="bam/GenericGymClient",
     entry_point="bam_gym.envs.clients.generic_gym_client:GenericGymClient",
 )
 
 register(
-    id="bam/MockEnv",
-    entry_point="bam_gym.envs.clients.mock_env:MockEnv",
+    id="bam/PickClient",
+    entry_point="bam_gym.envs.clients.pick_client:PickClient",
 )
+

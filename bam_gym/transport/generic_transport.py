@@ -5,7 +5,7 @@ from ros_py_types.bam_msgs import ErrorCode, ErrorType, GymFeedback
 
 class GenericTransport():
     def __init__(self, **kwargs):
-        self.mock_response: GymAPI_Request | None = None
+        self.mock_response: GymAPI_Response | None = None
 
     def set_mock_response(self, response: GymAPI_Response):
         self.mock_response = response
