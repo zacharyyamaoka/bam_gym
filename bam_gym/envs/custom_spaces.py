@@ -4,6 +4,107 @@ import numpy as np
 
 # Only include values in the spaces that people actually use/need to know about...
 
+#TODO for vector
+# self.observation_space = custom_spaces.MaskedSpaceWrapper(self.observation_space, mask=(self.num_envs, self.obs_mask))
+
+class Float(spaces.Space):
+    def __init__(self, low=-np.inf, high=np.inf):
+        super().__init__(shape=(), dtype=float)
+        self.low = low
+        self.high = high
+    
+    def sample(self):
+        return float(np.random.uniform(self.low, self.high))
+    
+    def contains(self, x):
+        return isinstance(x, (int, float)) and self.low <= x <= self.high
+
+
+
+def bam_obs_space(n_obs = 0, n_color = 0, n_depth = 0, n_pose = 0, n_detection = 0, automask = True):
+
+        obs_dict = spaces.Dict({})
+        obs_mask = {} 
+
+        if n_obs:
+            obs_dict["obs_names"] = spaces.Sequence(spaces.Text(max_length=32))
+            obs_dict["obs"] = spaces.Sequence(spaces.Box(low=-1, high=1, shape=(n_obs,), dtype=np.float32))
+            obs_mask["obs_names"] = (n_obs, None)
+            obs_mask["obs"] = (n_obs, None)
+        if n_color:
+            obs_dict["color_img"] = spaces.Sequence(color_img_space())
+            obs_mask["color_img"] = (n_color,)
+
+        if n_depth:
+            obs_dict["depth"] = spaces.Sequence(depth_img_space())
+            obs_mask["depth"] = (n_depth,)
+
+        if n_color or n_depth:
+            obs_dict["camera_info"] = spaces.Sequence(camera_info_space())
+            obs_mask["camera_info"] = (max(n_color, n_depth),)
+
+        if n_pose:
+            obs_dict["pose_names"] = spaces.Sequence(spaces.Text(max_length=32))
+            obs_dict["pose"] = spaces.Sequence(pose_stamped_space())
+            obs_mask["pose_names"] = (n_pose, None)
+            obs_mask["pose"] = (n_pose, None)
+        # Add segments to observation space
+        if n_detection:
+            obs_dict["segments"] = spaces.Sequence(segment2darray_space())
+            obs_mask["segments"] = (n_detection, None)
+
+        if automask:
+            return MaskedSpaceWrapper(obs_dict, obs_mask)
+        else:
+            return obs_dict
+
+def manipulator_api_space(n_waypoints=1, moteus_params=False, moveit_params=False, automask = True):
+
+    space = spaces.Dict({})
+    space_mask = {}
+
+    space["names"] = spaces.Sequence(spaces.Text(max_length=32))
+    space["waypoints"] = spaces.Sequence(pose_stamped_space())
+    space["parameters"] = spaces.Sequence(waypoint_params_space(moteus_params, moveit_params))
+
+    space_mask["names"] = (n_waypoints, None)
+    space_mask["waypoints"] = (n_waypoints, None)
+    space_mask["parameters"] = (n_waypoints, None)
+
+    if automask:
+        return MaskedSpaceWrapper(space, space_mask)
+    else:
+        return space
+
+
+def waypoint_params_space(moteus_params=False, moveit_params=False):
+    """
+    Returns a gym space for waypoint parameters including MOTEUS, MOVEIT, and MISC parameters.
+    """
+    space = spaces.Dict({})
+
+    if moteus_params:
+        space["kp_scale"] = Float(low=0.0, high=1.0)  # dynamically adjust stiffness
+        space["kd_scale"] = Float(low=0.0, high=1.0)
+        space["max_velocity"] = Float(low=0.0, high=100.0)
+        space["max_effort"] = Float(low=0.0, high=1000.0)
+        
+    if moveit_params:
+        # MOVEIT parameters
+        space["target_link"] = spaces.Text(max_length=32)  # TCP, IK_TIP, etc. what is the target link?
+        space["planner"] = spaces.Text(max_length=16)  # available are "ptp", "lin"
+        space["vel_scale"] = Float(low=0.0, high=1.0)
+        space["accel_scale"] = Float(low=0.0, high=1.0)
+        space["blend_radius"] = Float(low=0.0, high=1.0)  # Used to blend in MOVE_TO_SEQUENCE
+        space["goal_tol"] = Float(low=0.001, high=0.1)
+        space["path_tol"] = Float(low=0.001, high=0.1)
+        space["vertical_angle_scale"] = Float(low=0.0, high=1.0)  # 0 (Approach/Retreat completely along grasp z_axis) to 1 (Approach/Retreat offsets should be completely vertical to gravity/table surface)
+    
+    space["gripper_width"] = Float(low=0.0, high=0.2)
+    
+    return space
+
+
 def obs_space(value_range=(-np.inf, np.inf), max_obs_dim=1):
     """
     Returns separate gym spaces for obs_names and obs.
@@ -14,7 +115,6 @@ def obs_space(value_range=(-np.inf, np.inf), max_obs_dim=1):
 
     return space
 
-
 def pose_space(position_bounds=(-10.0, 10.0), orientation_bounds=(-np.pi, np.pi)):
     """Returns a gym space for a Pose with position and orientation (Euler). if you convert into a ros_py_type, it will be a quaternion."""
     pos_low, pos_high = position_bounds
@@ -22,15 +122,15 @@ def pose_space(position_bounds=(-10.0, 10.0), orientation_bounds=(-np.pi, np.pi)
 
     space = spaces.Dict({
         "position": spaces.Dict({
-            "x": spaces.Box(low=pos_low, high=pos_high, shape=(), dtype=np.float32),
-            "y": spaces.Box(low=pos_low, high=pos_high, shape=(), dtype=np.float32),
-            "z": spaces.Box(low=pos_low, high=pos_high, shape=(), dtype=np.float32),
+            "x": Float(low=pos_low, high=pos_high),
+            "y": Float(low=pos_low, high=pos_high),
+            "z": Float(low=pos_low, high=pos_high),
         }),
         "orientation": spaces.Dict({
-            "x": spaces.Box(low=ori_low, high=ori_high, shape=(), dtype=np.float32),  
-            "y": spaces.Box(low=ori_low, high=ori_high, shape=(), dtype=np.float32),  
-            "z": spaces.Box(low=ori_low, high=ori_high, shape=(), dtype=np.float32), 
-            "w": spaces.Box(low=ori_low, high=ori_high, shape=(), dtype=np.float32), 
+            "x": Float(low=ori_low, high=ori_high),  
+            "y": Float(low=ori_low, high=ori_high),  
+            "z": Float(low=ori_low, high=ori_high), 
+            "w": Float(low=ori_low, high=ori_high), 
 
         }),
     })
@@ -39,8 +139,8 @@ def pose_space(position_bounds=(-10.0, 10.0), orientation_bounds=(-np.pi, np.pi)
 
 def header_space():
     stamp_space = spaces.Dict({
-        "sec": spaces.Box(low=0, high=2**31 - 1, shape=(), dtype=np.int32),
-        "nanosec": spaces.Box(low=0, high=1_000_000_000 - 1, shape=(), dtype=np.int32),
+        "sec": Float(low=0, high=2**31 - 1),
+        "nanosec": Float(low=0, high=1_000_000_000 - 1),
     })
 
     space = spaces.Dict({
@@ -71,11 +171,9 @@ def grasp_space(position_bounds=(-10.0, 10.0), orientation_bounds=(-np.pi, np.pi
     """
     space = spaces.Dict({
         "pose": pose_stamped_space(position_bounds, orientation_bounds),
-        "gripper_width": spaces.Box(
+        "gripper_width": Float(
             low=grasp_width_bounds[0],
-            high=grasp_width_bounds[1],
-            shape=(),
-            dtype=np.float32
+            high=grasp_width_bounds[1]
         ),
     })
 
@@ -123,8 +221,8 @@ def depth_img_space(shape=(480, 600), dtype=np.uint16, value_range=(0, 65535)):
 
 def camera_info_space():
     return spaces.Dict({
-        "height": spaces.Box(low=0, high=10000, shape=(), dtype=np.int32),
-        "width": spaces.Box(low=0, high=10000, shape=(), dtype=np.int32),
+        "height": Float(low=0, high=10000),
+        "width": Float(low=0, high=10000),
         "k": spaces.Box(low=-1e6, high=1e6, shape=(9,), dtype=np.float64),
         "d": spaces.Box(low=-1e6, high=1e6, shape=(8,), dtype=np.float64),
     })
@@ -136,16 +234,16 @@ def detection_space(max_id=1e6, max_size=(600, 480), score_range=(0.0, 1.0)):
     space = spaces.Dict({
         "bbox": spaces.Dict({
             "center": spaces.Dict({
-                "x": spaces.Box(low=0, high=max_x, shape=(), dtype=np.float32),
-                "y": spaces.Box(low=0, high=max_y, shape=(), dtype=np.float32),
+                "x": Float(low=0, high=max_x),
+                "y": Float(low=0, high=max_y),
             }),
-            "size_x": spaces.Box(low=0, high=max_x, shape=(), dtype=np.float32),
-            "size_y": spaces.Box(low=0, high=max_y, shape=(), dtype=np.float32),
+            "size_x": Float(low=0, high=max_x),
+            "size_y": Float(low=0, high=max_y),
         }),
         "results": spaces.Sequence(
             spaces.Dict({
-                "id": spaces.Box(low=0, high=max_id, shape=(), dtype=np.int64),
-                "score": spaces.Box(low=score_range[0], high=score_range[1], shape=(), dtype=np.float32)
+                "id": Float(low=0, high=max_id),
+                "score": Float(low=score_range[0], high=score_range[1])
             })
         )
     })
@@ -159,8 +257,8 @@ def mask_space(max_size=(600, 480)):
     space = spaces.Dict({
         "points": spaces.Sequence(
             spaces.Dict({
-                "x": spaces.Box(low=0, high=max_x, shape=(), dtype=np.float32),
-                "y": spaces.Box(low=0, high=max_y, shape=(), dtype=np.float32),
+                "x": Float(low=0, high=max_x),
+                "y": Float(low=0, high=max_y),
             })
         )
     })
@@ -175,8 +273,8 @@ def segment2d_space():
         "id": spaces.Text(max_length=64),
         "polygon": spaces.Sequence(spaces.Dict({})),  # Polygon
         "mask": spaces.Dict({}),  # Image
-        "img_height": spaces.Box(low=0, high=2**16-1, shape=(), dtype=int),
-        "img_width": spaces.Box(low=0, high=2**16-1, shape=(), dtype=int),
+        "img_height": Float(low=0, high=2**16-1),
+        "img_width": Float(low=0, high=2**16-1),
     })
 
 def segment2darray_space():
@@ -231,7 +329,7 @@ class MaskedSpaceWrapper(spaces.Space):
             try:
                 return self.space.sample(mask=self.mask)
             except TypeError:
-                # fallback for spaces that don’t support masks natively
+                # fallback for spaces that don't support masks natively
                 return self.space.sample()
         raise NotImplementedError("Wrapped space does not support sampling")
 

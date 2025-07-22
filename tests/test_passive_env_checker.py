@@ -29,3 +29,6 @@ def test_passive_env_checker():
     for i in range(3):
         env.step(env.action_space.sample())
     env.close()
+
+if __name__ == "__main__":
+    test_passive_env_checker()

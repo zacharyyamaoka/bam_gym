@@ -1,3 +1,11 @@
+
+
+"""
+Not using custom pytypes any more! for now!!! just load in directly with rclpy lol please or other libraries...
+
+"""
+
+
 # #!/usr/bin/env python3
 
 # import pytest
